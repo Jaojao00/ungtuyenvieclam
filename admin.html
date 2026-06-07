@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Trang quản trị - Cấu hình link Google Sheets chấm công">
+  <title>Cài Đặt - Chấm Công</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="container">
+      <div class="header__brand">
+        <div class="header__logo">CC</div>
+        <div>
+          <div class="header__title">Cài Đặt</div>
+          <div class="header__subtitle">Cấu hình hệ thống chấm công</div>
+        </div>
+      </div>
+      <div class="header__actions">
+        <button class="theme-toggle" id="themeToggle" title="Đổi giao diện" aria-label="Toggle theme">🌙</button>
+        <button class="theme-toggle" id="logoutBtn" title="Đăng xuất" aria-label="Logout" style="display: none;">🚪</button>
+        <a href="index.html" class="theme-toggle" title="Về trang chính" aria-label="Home">🏠</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Login Screen -->
+  <div class="setup-screen" id="loginScreen">
+    <div class="setup-screen__icon">🔐</div>
+    <h1 class="setup-screen__title">Đăng Nhập Quản Trị</h1>
+    <p class="setup-screen__desc">
+      Vui lòng nhập mật khẩu admin để truy cập trang cấu hình hệ thống.
+    </p>
+    <div class="setup-screen__input-group" style="max-width: 400px;">
+      <input 
+        type="password" 
+        class="input" 
+        id="adminPassword" 
+        placeholder="Nhập mật khẩu admin..."
+        autocomplete="off"
+      >
+      <button class="btn btn--primary" id="loginBtn" onclick="handleLogin()">🔓 Đăng nhập</button>
+    </div>
+    <p id="loginError" style="color: var(--danger); margin-top: 12px; font-size: 0.85rem; display: none;"></p>
+  </div>
+
+  <!-- Admin Content (hidden until login) -->
+  <div class="admin-page" id="adminContent" style="display: none;">
+
+    <!-- Card 1: Google Sheets URL -->
+    <div class="admin-card" style="animation: fadeInUp 0.4s ease-out;">
+      <div class="admin-card__title">🔗 Link Google Sheets</div>
+      
+      <input 
+        type="text" 
+        class="input" 
+        id="sheetUrlInput" 
+        placeholder="Dán link Google Sheets tại đây..."
+        spellcheck="false"
+      >
+
+      <div class="btn-group">
+        <button class="btn btn--primary" onclick="saveConfig()">💾 Lưu cấu hình</button>
+        <button class="btn btn--secondary" onclick="testConnection()">🔍 Kiểm tra kết nối</button>
+        <button class="btn btn--secondary" onclick="clearConfig()" style="margin-left: auto;">🗑️ Xóa</button>
+      </div>
+
+      <!-- Connection Status -->
+      <div id="connectionStatus" style="display: none; margin-top: 16px;"></div>
+
+      <!-- Data Preview -->
+      <div class="admin-preview" id="dataPreview" style="display: none;">
+        <table class="detail-table" id="previewTable">
+          <thead id="previewTableHead"></thead>
+          <tbody id="previewTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Card 2: Announcement -->
+    <div class="admin-card" style="animation: fadeInUp 0.45s ease-out;">
+      <div class="admin-card__title">📢 Thông Báo Cho Nhân Viên</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">
+        Đăng thông báo hiển thị trên trang chủ cho nhân viên (VD: đã cập nhật dữ liệu mới).
+      </p>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <select class="input" id="announcementIcon" style="width: 80px; flex-shrink: 0;">
+          <option value="📢">📢</option>
+          <option value="✅">✅</option>
+          <option value="⚠️">⚠️</option>
+          <option value="📅">📅</option>
+          <option value="🎉">🎉</option>
+          <option value="📌">📌</option>
+          <option value="🔔">🔔</option>
+        </select>
+        <input 
+          type="text" 
+          class="input" 
+          id="announcementTitle" 
+          placeholder="Tiêu đề (VD: Cập nhật chấm công)"
+          value="Cập nhật chấm công"
+        >
+      </div>
+
+      <textarea 
+        class="input" 
+        id="announcementMessage" 
+        rows="3" 
+        placeholder="Nội dung thông báo (VD: Đã cập nhật dữ liệu chấm công ngày 8/6/2026, mời các bạn vào kiểm tra)"
+        style="resize: vertical; font-family: var(--font-family);"
+      ></textarea>
+
+      <!-- Quick template buttons -->
+      <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap;">
+        <button class="btn btn--sm btn--secondary" onclick="fillAnnouncementTemplate()">⚡ Tạo nhanh thông báo hôm nay</button>
+      </div>
+
+      <div class="btn-group" style="margin-top: 12px;">
+        <button class="btn btn--primary" onclick="publishAnnouncement()">📤 Đăng thông báo</button>
+        <button class="btn btn--secondary" onclick="deleteAnnouncement()" style="margin-left: auto;">🗑️ Xóa thông báo</button>
+      </div>
+
+      <!-- Current announcement preview -->
+      <div id="currentAnnouncement" style="display: none; margin-top: 16px; padding: 12px; background: var(--surface); border-radius: var(--radius-md); border: 1px solid var(--surface-border);">
+        <div style="font-size: 0.75rem; color: var(--text-tertiary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Thông báo hiện tại:</div>
+        <div id="currentAnnouncementPreview"></div>
+      </div>
+    </div>
+
+    <!-- Card 3: Share Link -->
+    <div class="admin-card" style="animation: fadeInUp 0.5s ease-out;">
+      <div class="admin-card__title">🔗 Link Chia Sẻ</div>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 16px;">
+        Chia sẻ link này cho nhân viên để họ có thể truy cập mà không cần cấu hình lại:
+      </p>
+      <div style="display: flex; gap: 8px;">
+        <input type="text" class="input" id="shareLink" readonly placeholder="Lưu cấu hình trước để tạo link chia sẻ">
+        <button class="btn btn--secondary" onclick="copyShareLink()">📋 Copy</button>
+      </div>
+    </div>
+
+    <!-- Card 3: Instructions -->
+    <div class="admin-card" style="animation: fadeInUp 0.6s ease-out;">
+      <div class="admin-card__title">📖 Hướng Dẫn Cài Đặt</div>
+      
+      <div class="admin-instructions">
+        <h3>Bước 1: Publish Google Sheets</h3>
+        <ol>
+          <li>Mở Google Sheets chấm công trên máy tính</li>
+          <li>Vào <code>File</code> → <code>Share</code> → <code>Publish to web</code></li>
+          <li>Chọn sheet chứa dữ liệu chấm công</li>
+          <li>Chọn format: <code>Comma-separated values (.csv)</code></li>
+          <li>Nhấn <code>Publish</code></li>
+          <li>Copy link được tạo ra</li>
+        </ol>
+      </div>
+
+      <div class="admin-instructions" style="margin-top: 12px;">
+        <h3>Bước 2: Dán link vào ô phía trên</h3>
+        <ol>
+          <li>Dán link vào ô <code>Link Google Sheets</code></li>
+          <li>Nhấn <code>Kiểm tra kết nối</code> để xem trước dữ liệu</li>
+          <li>Nếu OK, nhấn <code>Lưu cấu hình</code></li>
+        </ol>
+      </div>
+
+      <div class="admin-instructions" style="margin-top: 12px;">
+        <h3>💡 Mẹo</h3>
+        <ol>
+          <li>Bạn cũng có thể dán link Google Sheets trực tiếp (không cần publish), hệ thống sẽ tự xử lý</li>
+          <li>Nếu sheet có nhiều tab, hãy dùng link publish của tab chứa dữ liệu chấm công</li>
+          <li>Dữ liệu sẽ tự động cập nhật khi Google Sheets được chỉnh sửa (sau khi publish)</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Card 4: Change Password -->
+    <div class="admin-card" style="animation: fadeInUp 0.65s ease-out;">
+      <div class="admin-card__title">🔑 Đổi Mật Khẩu Admin</div>
+      <input 
+        type="password" 
+        class="input" 
+        id="currentPwInput" 
+        placeholder="Mật khẩu hiện tại"
+        autocomplete="off"
+        style="margin-bottom: 8px;"
+      >
+      <input 
+        type="password" 
+        class="input" 
+        id="newPwInput" 
+        placeholder="Mật khẩu mới"
+        autocomplete="off"
+        style="margin-bottom: 8px;"
+      >
+      <input 
+        type="password" 
+        class="input" 
+        id="confirmPwInput" 
+        placeholder="Xác nhận mật khẩu mới"
+        autocomplete="off"
+        style="margin-bottom: 12px;"
+      >
+      <button class="btn btn--primary" onclick="changePassword()">🔑 Đổi mật khẩu</button>
+    </div>
+
+    <!-- Card 5: Data Structure -->
+    <div class="admin-card" style="animation: fadeInUp 0.7s ease-out;">
+      <div class="admin-card__title">📊 Cấu Trúc Dữ Liệu Hỗ Trợ</div>
+      <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 12px;">
+        Google Sheets cần chứa các cột sau (hệ thống sẽ tự nhận diện):
+      </p>
+      <div class="detail-table-wrapper">
+        <table class="detail-table">
+          <thead>
+            <tr>
+              <th>Cột</th>
+              <th>Mô tả</th>
+              <th>Bắt buộc</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Mã CTV</td><td>Mã nhân viên để tra cứu</td><td><span class="badge badge--danger">Bắt buộc</span></td></tr>
+            <tr><td>Họ và tên</td><td>Tên nhân viên</td><td><span class="badge badge--danger">Bắt buộc</span></td></tr>
+            <tr><td>Ngày</td><td>Ngày chấm công (YYYY-MM-DD)</td><td><span class="badge badge--danger">Bắt buộc</span></td></tr>
+            <tr><td>Giờ vào thực tế</td><td>Thời gian check-in</td><td><span class="badge badge--info">Khuyến nghị</span></td></tr>
+            <tr><td>Giờ ra thực tế</td><td>Thời gian check-out</td><td><span class="badge badge--info">Khuyến nghị</span></td></tr>
+            <tr><td>Tổng giờ làm việc</td><td>Số giờ làm việc thực tế</td><td><span class="badge badge--info">Khuyến nghị</span></td></tr>
+            <tr><td>Ca chấm công</td><td>Ca làm việc</td><td><span class="badge badge--success">Tùy chọn</span></td></tr>
+            <tr><td>Claim công</td><td>Trạng thái claim</td><td><span class="badge badge--success">Tùy chọn</span></td></tr>
+            <tr><td>Bộ phận, Team, ...</td><td>Thông tin bổ sung</td><td><span class="badge badge--success">Tùy chọn</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Hệ Thống Chấm Công · <a href="index.html">← Về trang chính</a></p>
+    </div>
+  </footer>
+
+  <script>
+    // ============ Constants ============
+    const STORAGE_KEYS = {
+      SHEET_URL: 'attendance_sheet_url',
+      THEME: 'attendance_theme',
+      ADMIN_PW_HASH: 'attendance_admin_pw_hash',
+      ANNOUNCEMENT: 'attendance_announcement',
+    };
+
+    // Default password: admin@2026
+    const DEFAULT_PW_HASH = '8b3ce0c3977ee6e8d53efeb1fb5b4f82bfb85e44b706c4eded197bd78875da67';
+
+    // ============ Init ============
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      checkAuth();
+    });
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'dark';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      updateThemeIcon(savedTheme);
+
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(STORAGE_KEYS.THEME, next);
+        updateThemeIcon(next);
+      });
+    }
+
+    function updateThemeIcon(theme) {
+      document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+
+    function loadSavedConfig() {
+      const savedUrl = localStorage.getItem(STORAGE_KEYS.SHEET_URL) || '';
+      document.getElementById('sheetUrlInput').value = savedUrl;
+      updateShareLink(savedUrl);
+    }
+
+    // ============ Auth ============
+    async function hashPassword(pw) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(pw);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    function getStoredHash() {
+      return localStorage.getItem(STORAGE_KEYS.ADMIN_PW_HASH) || DEFAULT_PW_HASH;
+    }
+
+    function checkAuth() {
+      const isLoggedIn = sessionStorage.getItem('admin_authenticated') === 'true';
+      if (isLoggedIn) {
+        showAdminContent();
+      } else {
+        showLoginScreen();
+      }
+    }
+
+    function showLoginScreen() {
+      document.getElementById('loginScreen').style.display = 'flex';
+      document.getElementById('adminContent').style.display = 'none';
+      document.getElementById('logoutBtn').style.display = 'none';
+      setTimeout(() => document.getElementById('adminPassword')?.focus(), 100);
+    }
+
+    function showAdminContent() {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminContent').style.display = 'block';
+      document.getElementById('logoutBtn').style.display = 'flex';
+      loadSavedConfig();
+      loadCurrentAnnouncement();
+    }
+
+    async function handleLogin() {
+      const pw = document.getElementById('adminPassword').value;
+      const errorEl = document.getElementById('loginError');
+
+      if (!pw) {
+        errorEl.textContent = 'Vui lòng nhập mật khẩu.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      const inputHash = await hashPassword(pw);
+      const storedHash = getStoredHash();
+
+      if (inputHash === storedHash) {
+        sessionStorage.setItem('admin_authenticated', 'true');
+        errorEl.style.display = 'none';
+        showAdminContent();
+        showToast('Đăng nhập thành công!', 'success');
+      } else {
+        errorEl.textContent = 'Mật khẩu không đúng. Vui lòng thử lại.';
+        errorEl.style.display = 'block';
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').focus();
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem('admin_authenticated');
+      document.getElementById('adminPassword').value = '';
+      showLoginScreen();
+      showToast('Đã đăng xuất', 'warning');
+    }
+
+    async function changePassword() {
+      const currentPw = document.getElementById('currentPwInput').value;
+      const newPw = document.getElementById('newPwInput').value;
+      const confirmPw = document.getElementById('confirmPwInput').value;
+
+      if (!currentPw || !newPw || !confirmPw) {
+        showToast('Vui lòng điền đầy đủ các ô.', 'error');
+        return;
+      }
+
+      const currentHash = await hashPassword(currentPw);
+      if (currentHash !== getStoredHash()) {
+        showToast('Mật khẩu hiện tại không đúng!', 'error');
+        return;
+      }
+
+      if (newPw.length < 6) {
+        showToast('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error');
+        return;
+      }
+
+      if (newPw !== confirmPw) {
+        showToast('Mật khẩu mới và xác nhận không khớp!', 'error');
+        return;
+      }
+
+      const newHash = await hashPassword(newPw);
+      localStorage.setItem(STORAGE_KEYS.ADMIN_PW_HASH, newHash);
+
+      document.getElementById('currentPwInput').value = '';
+      document.getElementById('newPwInput').value = '';
+      document.getElementById('confirmPwInput').value = '';
+
+      showToast('Đổi mật khẩu thành công!', 'success');
+    }
+
+    // Logout button & Enter key for login
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
+      document.getElementById('adminPassword')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') handleLogin();
+      });
+    });
+
+    // ============ Announcement ============
+    function loadCurrentAnnouncement() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENT);
+        const container = document.getElementById('currentAnnouncement');
+        const preview = document.getElementById('currentAnnouncementPreview');
+
+        if (!raw) {
+          container.style.display = 'none';
+          return;
+        }
+
+        const ann = JSON.parse(raw);
+        const postedDate = new Date(ann.timestamp);
+        const dateStr = `${String(postedDate.getDate()).padStart(2, '0')}/${String(postedDate.getMonth() + 1).padStart(2, '0')}/${postedDate.getFullYear()} ${String(postedDate.getHours()).padStart(2, '0')}:${String(postedDate.getMinutes()).padStart(2, '0')}`;
+
+        container.style.display = 'block';
+        preview.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span style="font-size: 1.2rem;">${ann.icon || '\ud83d\udce2'}</span>
+            <strong style="color: var(--primary-light);">${ann.title || 'Th\u00f4ng b\u00e1o'}</strong>
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 4px;">${ann.message}</div>
+          <div style="font-size: 0.75rem; color: var(--text-tertiary);">Đ\u0103ng l\u00fac: ${dateStr}</div>
+        `;
+      } catch {
+        document.getElementById('currentAnnouncement').style.display = 'none';
+      }
+    }
+
+    function fillAnnouncementTemplate() {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate());
+      const dateStr = `${tomorrow.getDate()}/${tomorrow.getMonth() + 1}/${tomorrow.getFullYear()}`;
+
+      document.getElementById('announcementIcon').value = '\u2705';
+      document.getElementById('announcementTitle').value = 'C\u1eadp nh\u1eadt ch\u1ea5m c\u00f4ng';
+      document.getElementById('announcementMessage').value = `\u0110\u00e3 c\u1eadp nh\u1eadt d\u1eef li\u1ec7u ch\u1ea5m c\u00f4ng ng\u00e0y ${dateStr}, m\u1eddi c\u00e1c b\u1ea1n v\u00e0o ki\u1ec3m tra.`;
+      showToast('\u0110\u00e3 t\u1ea1o m\u1eabu th\u00f4ng b\u00e1o!', 'success');
+    }
+
+    function publishAnnouncement() {
+      const icon = document.getElementById('announcementIcon').value;
+      const title = document.getElementById('announcementTitle').value.trim();
+      const message = document.getElementById('announcementMessage').value.trim();
+
+      if (!message) {
+        showToast('Vui l\u00f2ng nh\u1eadp n\u1ed9i dung th\u00f4ng b\u00e1o.', 'error');
+        return;
+      }
+
+      const announcement = {
+        icon: icon,
+        title: title || 'Th\u00f4ng b\u00e1o',
+        message: message,
+        timestamp: new Date().toISOString(),
+      };
+
+      localStorage.setItem(STORAGE_KEYS.ANNOUNCEMENT, JSON.stringify(announcement));
+      loadCurrentAnnouncement();
+      showToast('\u0110\u00e3 \u0111\u0103ng th\u00f4ng b\u00e1o th\u00e0nh c\u00f4ng!', 'success');
+    }
+
+    function deleteAnnouncement() {
+      if (!localStorage.getItem(STORAGE_KEYS.ANNOUNCEMENT)) {
+        showToast('Kh\u00f4ng c\u00f3 th\u00f4ng b\u00e1o n\u00e0o \u0111\u1ec3 x\u00f3a.', 'warning');
+        return;
+      }
+
+      if (!confirm('B\u1ea1n c\u00f3 ch\u1eafc mu\u1ed1n x\u00f3a th\u00f4ng b\u00e1o?')) return;
+
+      localStorage.removeItem(STORAGE_KEYS.ANNOUNCEMENT);
+      document.getElementById('announcementMessage').value = '';
+      document.getElementById('currentAnnouncement').style.display = 'none';
+      showToast('\u0110\u00e3 x\u00f3a th\u00f4ng b\u00e1o.', 'success');
+    }
+
+    // ============ Save Config ============
+    function saveConfig() {
+      const url = document.getElementById('sheetUrlInput').value.trim();
+      if (!url) {
+        showToast('Vui lòng nhập link Google Sheets', 'error');
+        return;
+      }
+
+      localStorage.setItem(STORAGE_KEYS.SHEET_URL, url);
+      updateShareLink(url);
+      showToast('Đã lưu cấu hình thành công!', 'success');
+    }
+
+    // ============ Clear Config ============
+    function clearConfig() {
+      if (!confirm('Bạn có chắc muốn xóa cấu hình?')) return;
+      localStorage.removeItem(STORAGE_KEYS.SHEET_URL);
+      document.getElementById('sheetUrlInput').value = '';
+      document.getElementById('shareLink').value = '';
+      document.getElementById('dataPreview').style.display = 'none';
+      document.getElementById('connectionStatus').style.display = 'none';
+      showToast('Đã xóa cấu hình', 'warning');
+    }
+
+    // ============ Test Connection ============
+    async function testConnection() {
+      const url = document.getElementById('sheetUrlInput').value.trim();
+      if (!url) {
+        showToast('Vui lòng nhập link Google Sheets trước', 'error');
+        return;
+      }
+
+      const statusEl = document.getElementById('connectionStatus');
+      statusEl.style.display = 'block';
+      statusEl.innerHTML = '<div style="text-align: center; padding: 16px; color: var(--text-secondary);"><div class="spinner" style="margin: 0 auto 8px;"></div>Đang kết nối...</div>';
+
+      try {
+        const csvUrl = convertToCSVUrl(url);
+        const response = await fetch(csvUrl);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        const csvText = await response.text();
+        const data = parseCSV(csvText);
+
+        if (data.length === 0) {
+          throw new Error('Không có dữ liệu');
+        }
+
+        statusEl.innerHTML = `
+          <div style="padding: 12px; background: var(--success-bg); border: 1px solid var(--success-border); border-radius: var(--radius-md); color: var(--success-light);">
+            ✅ Kết nối thành công! Tìm thấy <strong>${data.length}</strong> bản ghi.
+          </div>
+        `;
+
+        // Show preview
+        showPreview(data);
+        showToast(`Kết nối thành công! ${data.length} bản ghi`, 'success');
+
+      } catch (error) {
+        statusEl.innerHTML = `
+          <div style="padding: 12px; background: var(--danger-bg); border: 1px solid var(--danger-border); border-radius: var(--radius-md); color: var(--danger-light);">
+            ❌ Lỗi kết nối: ${error.message}<br>
+            <small>Hãy chắc chắn Google Sheets đã được Publish to web hoặc quyền truy cập là "Anyone with the link".</small>
+          </div>
+        `;
+        showToast('Lỗi kết nối', 'error');
+      }
+    }
+
+    // ============ Preview ============
+    function showPreview(data) {
+      const preview = document.getElementById('dataPreview');
+      const thead = document.getElementById('previewTableHead');
+      const tbody = document.getElementById('previewTableBody');
+
+      preview.style.display = 'block';
+
+      // Show first 5 rows with key columns
+      const previewCols = ['Mã CTV', 'Họ và tên', 'Ngày', 'Giờ vào thực tế', 'Giờ ra thực tế', 'Tổng giờ làm việc', 'Claim công'];
+      
+      thead.innerHTML = '<tr>' + previewCols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+
+      const rows = data.slice(0, 5);
+      tbody.innerHTML = rows.map(row => {
+        return '<tr>' + previewCols.map(col => `<td>${row[col] || '-'}</td>`).join('') + '</tr>';
+      }).join('');
+    }
+
+    // ============ Share Link ============
+    function updateShareLink(url) {
+      if (!url) {
+        document.getElementById('shareLink').value = '';
+        return;
+      }
+
+      const baseUrl = window.location.href.replace('admin.html', 'index.html').split('?')[0];
+      const shareUrl = `${baseUrl}?sheet=${encodeURIComponent(url)}`;
+      document.getElementById('shareLink').value = shareUrl;
+    }
+
+    function copyShareLink() {
+      const input = document.getElementById('shareLink');
+      if (!input.value) {
+        showToast('Lưu cấu hình trước để tạo link chia sẻ', 'warning');
+        return;
+      }
+
+      navigator.clipboard.writeText(input.value).then(() => {
+        showToast('Đã copy link chia sẻ!', 'success');
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        showToast('Đã copy link chia sẻ!', 'success');
+      });
+    }
+
+    // ============ CSV Helpers (reused from app.js) ============
+    function convertToCSVUrl(url) {
+      if (url.includes('/pub?') && url.includes('output=csv')) return url;
+      if (url.includes('/export?') && url.includes('format=csv')) return url;
+
+      let spreadsheetId = '';
+      const match = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (match) spreadsheetId = match[1];
+
+      if (!spreadsheetId && /^[a-zA-Z0-9-_]{20,}$/.test(url.trim())) {
+        spreadsheetId = url.trim();
+      }
+
+      if (!spreadsheetId) {
+        throw new Error('Không nhận diện được link Google Sheets');
+      }
+
+      const gidMatch = url.match(/[#&?]gid=(\d+)/);
+      const gid = gidMatch ? gidMatch[1] : '0';
+
+      return `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
+    }
+
+    function parseCSV(csvText) {
+      const lines = csvText.split('\n');
+      if (lines.length < 2) return [];
+
+      const headers = parseCSVLine(lines[0]);
+      const data = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        const values = parseCSVLine(line);
+        const row = {};
+
+        for (let j = 0; j < headers.length; j++) {
+          row[headers[j]] = (values[j] || '').trim();
+        }
+
+        if (row['Mã CTV']) {
+          data.push(row);
+        }
+      }
+
+      return data;
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (inQuotes) {
+          if (char === '"' && nextChar === '"') {
+            current += '"';
+            i++;
+          } else if (char === '"') {
+            inQuotes = false;
+          } else {
+            current += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === ',') {
+            result.push(current);
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+      }
+
+      result.push(current);
+      return result;
+    }
+
+    // ============ Toast ============
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast toast--${type}`;
+      const icons = { success: '✅', error: '❌', warning: '⚠️' };
+      toast.innerHTML = `
+        <span class="toast__icon">${icons[type] || '📢'}</span>
+        <span class="toast__message">${message}</span>
+      `;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px)';
+        toast.style.transition = 'all 0.3s ease-out';
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Hệ thống tra cứu chấm công nhân viên - Kiểm tra ngày đi làm, giờ vào ra, thống kê chuyên cần.">
+  <title>Tra Cứu Chấm Công</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="container">
+      <div class="header__brand">
+        <div class="header__logo">CC</div>
+        <div>
+          <div class="header__title">Chấm Công</div>
+          <div class="header__subtitle">Hệ thống tra cứu chấm công nhân viên</div>
+        </div>
+      </div>
+      <div class="header__actions">
+        <button class="theme-toggle" id="themeToggle" title="Đổi giao diện" aria-label="Toggle theme">
+          🌙
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Announcement Banner -->
+  <div class="announcement" id="announcementBanner" style="display: none;">
+    <div class="container">
+      <div class="announcement__inner">
+        <div class="announcement__icon" id="announcementIcon">📢</div>
+        <div class="announcement__content">
+          <div class="announcement__title" id="announcementTitle"></div>
+          <div class="announcement__message" id="announcementMessage"></div>
+          <div class="announcement__time" id="announcementTime"></div>
+        </div>
+        <button class="announcement__close" id="announcementClose" aria-label="Đóng thông báo">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- Day Detail Overlay -->
+  <div class="day-detail__overlay" id="dayDetailOverlay"></div>
+
+  <!-- Day Detail Popup -->
+  <div class="day-detail" id="dayDetailPopup">
+    <div class="day-detail__header">
+      <div class="day-detail__title" id="dayDetailTitle"></div>
+      <button class="day-detail__close" id="dayDetailClose" aria-label="Close">✕</button>
+    </div>
+    <div id="dayDetailContent"></div>
+  </div>
+
+  <main>
+    <!-- Notice Screen (shown when no Google Sheets URL configured) -->
+    <div class="setup-screen" id="setupScreen" style="display: none;">
+      <div class="setup-screen__icon">🔒</div>
+      <h1 class="setup-screen__title">Hệ thống chưa được cấu hình</h1>
+      <p class="setup-screen__desc">
+        Hệ thống chấm công chưa được kết nối dữ liệu. 
+        Vui lòng liên hệ quản trị viên để được hỗ trợ cài đặt.
+      </p>
+    </div>
+
+    <!-- Search Section -->
+    <section class="search-section" id="searchSection" style="display: none;">
+      <div class="container">
+        <h1 class="search-section__title">Tra Cứu Chấm Công</h1>
+        <p class="search-section__subtitle">Nhập mã CTV của bạn để kiểm tra lịch sử chấm công</p>
+
+        <div class="search-box" id="searchBox">
+          <input
+            type="text"
+            class="search-box__input"
+            id="searchInput"
+            placeholder="Nhập mã CTV (VD: OPS212827)..."
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <button class="search-box__btn" id="searchBtn" onclick="handleSearch()">
+            <span class="spinner"></span>
+            <span class="btn-text">🔍 Tra cứu</span>
+          </button>
+        </div>
+
+        <!-- Recent Searches -->
+        <div class="recent-searches" id="recentSearches" style="display: none;">
+          <span class="recent-searches__label">Gần đây:</span>
+        </div>
+
+        <!-- Data Status -->
+        <div class="data-status" id="dataStatus" style="display: none;">
+          <span class="data-status__text" id="dataStatusText"></span>
+          <button class="data-status__refresh" id="refreshBtn" onclick="refreshData()" title="Làm mới dữ liệu">🔄 Làm mới</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Results Section -->
+    <section class="results-section" id="resultsSection" style="display: none;">
+      <div class="container">
+
+        <!-- Profile Card -->
+        <div class="profile-card" id="profileCard">
+          <div class="profile-card__avatar" id="profileAvatar"></div>
+          <div class="profile-card__info">
+            <div class="profile-card__name" id="profileName"></div>
+            <div class="profile-card__code" id="profileCode"></div>
+            <div class="profile-card__meta" id="profileMeta"></div>
+          </div>
+        </div>
+
+        <!-- Month Navigator -->
+        <div class="month-nav">
+          <button class="month-nav__btn" id="prevMonth" onclick="changeMonth(-1)" aria-label="Tháng trước">◀</button>
+          <div class="month-nav__label" id="monthLabel"></div>
+          <button class="month-nav__btn" id="nextMonth" onclick="changeMonth(1)" aria-label="Tháng sau">▶</button>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid animate-stagger" id="statsGrid">
+          <div class="stat-card stat-card--success">
+            <div class="stat-card__icon">✅</div>
+            <div class="stat-card__value" id="statDaysWorked">0</div>
+            <div class="stat-card__label">Ngày đi làm</div>
+          </div>
+          <div class="stat-card stat-card--info">
+            <div class="stat-card__icon">⏱️</div>
+            <div class="stat-card__value" id="statTotalHours">0h</div>
+            <div class="stat-card__label">Tổng giờ làm</div>
+          </div>
+          <div class="stat-card stat-card--warning">
+            <div class="stat-card__icon">📝</div>
+            <div class="stat-card__value" id="statClaims">0</div>
+            <div class="stat-card__label">Cần Claim</div>
+          </div>
+          <div class="stat-card stat-card--danger">
+            <div class="stat-card__icon">📊</div>
+            <div class="stat-card__value" id="statAttendance">0%</div>
+            <div class="stat-card__label">Chuyên cần</div>
+          </div>
+        </div>
+
+        <!-- Content Grid: Calendar + Table -->
+        <div class="content-grid">
+          <!-- Calendar Card -->
+          <div class="calendar-card">
+            <div class="calendar-card__title">📅 Lịch Chấm Công</div>
+            <div class="calendar" id="calendar">
+              <div class="calendar__header">
+                <div class="calendar__day-label">T2</div>
+                <div class="calendar__day-label">T3</div>
+                <div class="calendar__day-label">T4</div>
+                <div class="calendar__day-label">T5</div>
+                <div class="calendar__day-label">T6</div>
+                <div class="calendar__day-label">T7</div>
+                <div class="calendar__day-label">CN</div>
+              </div>
+              <div class="calendar__body" id="calendarBody"></div>
+            </div>
+            <div class="calendar-legend">
+              <div class="calendar-legend__item">
+                <div class="calendar-legend__dot calendar-legend__dot--worked"></div>
+                <span>Đi làm</span>
+              </div>
+              <div class="calendar-legend__item">
+                <div class="calendar-legend__dot calendar-legend__dot--claim"></div>
+                <span>Cần claim</span>
+              </div>
+              <div class="calendar-legend__item">
+                <div class="calendar-legend__dot calendar-legend__dot--absent"></div>
+                <span>Nghỉ / Chưa có</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail Table Card -->
+          <div class="table-card">
+            <div class="table-card__title">📋 Chi Tiết Chấm Công</div>
+            <div class="detail-table-wrapper">
+              <table class="detail-table" id="detailTable">
+                <thead>
+                  <tr>
+                    <th>Ngày</th>
+                    <th>Thứ</th>
+                    <th>Giờ vào</th>
+                    <th>Giờ ra</th>
+                    <th>Tổng giờ</th>
+                    <th>Ca</th>
+                    <th>Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody id="detailTableBody">
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Empty State (no results) -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+      <div class="empty-state__icon">🔍</div>
+      <h2 class="empty-state__title">Không tìm thấy dữ liệu</h2>
+      <p class="empty-state__desc" id="emptyStateDesc">
+        Mã CTV không tồn tại trong hệ thống hoặc chưa có dữ liệu chấm công.
+      </p>
+    </div>
+
+    <!-- Error State -->
+    <div class="error-state" id="errorState" style="display: none;">
+      <div class="error-state__icon">⚠️</div>
+      <p class="error-state__message" id="errorMessage"></p>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <p>© 2026 Hệ Thống Chấm Công · Powered by GitHub Pages & Google Sheets</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
