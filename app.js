@@ -49,7 +49,38 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }, 15000);
 
-    // Handle form submission UX
+    // Xử lý Validation và Submit
+    submitBtn.addEventListener('click', function(e) {
+        const inputs = applyForm.querySelectorAll('input[required], select[required]');
+        let isValid = true;
+        let firstInvalid = null;
+
+        for (let el of inputs) {
+            if (el.type === 'radio') {
+                const checked = applyForm.querySelector(`input[name="${el.name}"]:checked`);
+                if (!checked) {
+                    isValid = false;
+                    firstInvalid = el;
+                    break;
+                }
+            } else if (!el.value.trim()) {
+                isValid = false;
+                firstInvalid = el;
+                break;
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault(); // Chặn gửi form
+            alert("⚠️ Vui lòng điền và chọn ĐẦY ĐỦ tất cả các thông tin bắt buộc (có dấu *) trước khi gửi!");
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.closest('.form-group').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return;
+        }
+    });
+
     applyForm.addEventListener('submit', function(e) {
         submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> <span>ĐANG GỬI...</span>';
         submitBtn.style.opacity = '0.8';
