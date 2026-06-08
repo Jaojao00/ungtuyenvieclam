@@ -101,14 +101,30 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
         const imageFile = e.target.files[0];
-        html5QrCode.scanFile(imageFile, true)
-            .then(decodedText => {
-                onScanSuccess(decodedText);
-            })
-            .catch(err => {
-                alert("Không tìm thấy mã QR trên ảnh. Hãy đảm bảo chụp rõ nét góc chứa mã QR của CCCD!");
-                console.log(err);
-            });
+
+        const processFile = () => {
+            // Hiển thị trạng thái đang xử lý (tuỳ chọn)
+            document.getElementById('reader').innerHTML = '<div style="color:white; padding: 20px;">Đang xử lý ảnh, vui lòng chờ...</div>';
+
+            html5QrCode.scanFile(imageFile, false)
+                .then(decodedText => {
+                    onScanSuccess(decodedText);
+                    e.target.value = ''; // Reset input
+                })
+                .catch(err => {
+                    alert("Không thể đọc được mã QR từ ảnh. Lời khuyên: Hãy chụp GẦN SÁT vào khu vực mã QR ở góc thẻ để ảnh rõ nét nhất!");
+                    console.log("Scan File Error: ", err);
+                    e.target.value = ''; // Reset input
+                    // Có thể gọi lại html5QrCode.start() ở đây nếu muốn
+                });
+        };
+
+        // Nếu camera đang chạy, cần stop trước khi scan file để tránh xung đột thư viện
+        try {
+            html5QrCode.stop().then(processFile).catch(processFile);
+        } catch (error) {
+            processFile();
+        }
     }
 
     // Xử lý quét qua ảnh tải lên hoặc chụp từ camera
@@ -126,11 +142,15 @@ document.addEventListener("DOMContentLoaded", function() {
     function closeScanner() {
         qrModal.classList.remove('show');
         if (html5QrCode) {
-            html5QrCode.stop().then(() => {
+            try {
+                html5QrCode.stop().then(() => {
+                    html5QrCode.clear();
+                }).catch(error => {
+                    console.error("Failed to stop html5Qrcode. ", error);
+                });
+            } catch (e) {
                 html5QrCode.clear();
-            }).catch(error => {
-                console.error("Failed to stop html5Qrcode. ", error);
-            });
+            }
         }
     }
 
