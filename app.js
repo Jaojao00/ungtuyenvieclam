@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const btnDeleteSheet = document.getElementById('btnDeleteSheet');
     const adminStatusText = document.getElementById('adminStatusText');
 
-    const ADMIN_PASSWORD = "admin"; // Đổi mật khẩu tại đây
+    const ADMIN_PASSWORD = "Admin@agari123"; // Đổi mật khẩu tại đây
 
     if (btnAdmin) {
         btnAdmin.addEventListener('click', () => {
