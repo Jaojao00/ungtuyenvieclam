@@ -68,6 +68,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const btnCloseQR = document.getElementById('btnCloseQR');
     const qrModal = document.getElementById('qrModal');
     const qrInputFile = document.getElementById('qrInputFile');
+    const qrCaptureFile = document.getElementById('qrCaptureFile');
     
     let html5QrCode = null;
 
@@ -94,22 +95,28 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Xử lý quét qua ảnh tải lên
+    // Hàm xử lý file ảnh chung
+    function handleImageFile(e) {
+        if (e.target.files.length == 0 || !html5QrCode) {
+            return;
+        }
+        const imageFile = e.target.files[0];
+        html5QrCode.scanFile(imageFile, true)
+            .then(decodedText => {
+                onScanSuccess(decodedText);
+            })
+            .catch(err => {
+                alert("Không tìm thấy mã QR trên ảnh. Hãy đảm bảo chụp rõ nét góc chứa mã QR của CCCD!");
+                console.log(err);
+            });
+    }
+
+    // Xử lý quét qua ảnh tải lên hoặc chụp từ camera
     if (qrInputFile) {
-        qrInputFile.addEventListener('change', e => {
-            if (e.target.files.length == 0 || !html5QrCode) {
-                return;
-            }
-            const imageFile = e.target.files[0];
-            html5QrCode.scanFile(imageFile, true)
-                .then(decodedText => {
-                    onScanSuccess(decodedText);
-                })
-                .catch(err => {
-                    alert("Không tìm thấy mã QR trên ảnh. Hãy thử ảnh khác sáng và rõ hơn!");
-                    console.log(err);
-                });
-        });
+        qrInputFile.addEventListener('change', handleImageFile);
+    }
+    if (qrCaptureFile) {
+        qrCaptureFile.addEventListener('change', handleImageFile);
     }
 
     if (btnCloseQR) {

@@ -116,11 +116,18 @@
                     <div class="qr-custom-ui">
                         <div id="reader"></div>
                         <div class="qr-controls">
+                            <!-- Nút mở camera chụp ảnh gốc của máy -->
+                            <label class="btn-qr-upload btn-qr-capture">
+                                <i class="ri-camera-lens-fill"></i> Mở Camera & Chụp
+                                <input type="file" id="qrCaptureFile" accept="image/*" capture="environment" style="display: none;">
+                            </label>
+
+                            <!-- Nút chọn từ thư viện ảnh -->
                             <label class="btn-qr-upload">
-                                <i class="ri-image-add-line"></i> Tải ảnh từ thư viện
+                                <i class="ri-image-add-line"></i> Chọn ảnh từ thư viện
                                 <input type="file" id="qrInputFile" accept="image/*" style="display: none;">
                             </label>
-                            <p class="qr-hint">Hoặc giơ mặt trước thẻ CCCD vào khung camera bên trên</p>
+                            <p class="qr-hint">Hoặc giơ mặt trước thẻ CCCD vào khung camera trực tiếp bên trên</p>
                         </div>
                     </div>
                 </div>
