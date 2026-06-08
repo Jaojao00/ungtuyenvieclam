@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuyển Dụng AGARI - Đăng Ký Làm Việc</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- QR Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+    <div class="background-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+    </div>
+
+    <div class="container">
+        <!-- Cột Thông Tin Tuyển Dụng -->
+        <div class="info-section glass-panel">
+            <div class="badge">
+                <i class="ri-flashlight-fill"></i> TUYỂN DỤNG GẤP
+            </div>
+            <h1>[AGARI] LAO ĐỘNG PHỔ THÔNG <br><span>ĐI LÀM NGAY!</span></h1>
+            
+            <div class="applicant-count" id="applicantCountBlock" style="display: none;">
+                <i class="ri-group-fill"></i> Đã có <b id="countNumber">0</b> ứng viên đăng ký
+            </div>
+            
+            <div class="info-block">
+                <h3><i class="ri-map-pin-2-fill"></i> ĐỊA ĐIỂM LÀM VIỆC</h3>
+                <p>Kho KCN Bình Minh: Lô 01, kho số A01, KCN Bình Minh, Ấp Mỹ Lợi, Xã Mỹ Hoà, Tỉnh Vĩnh Long.</p>
+            </div>
+
+            <div class="info-block">
+                <h3><i class="ri-time-fill"></i> THỜI GIAN & THU NHẬP</h3>
+                <p class="subtitle">Đăng ký lịch làm việc linh hoạt theo tuần.</p>
+                <ul class="salary-list">
+                    <li><span>Ca 06:00 – 15:00:</span> <strong>230.000 VNĐ / Ca</strong></li>
+                    <li><span>Ca 15:00 – 22:00:</span> <strong>200.000 VNĐ / Ca</strong></li>
+                    <li><span>Ca 22:00 – 06:00:</span> <strong>280.000 VNĐ / Ca</strong></li>
+                    <li><span>Ca 18:00 – 22:00 (4 tiếng):</span> <strong>125.000 VNĐ / Ca</strong></li>
+                    <li><span>Ca 06:00 – 10:00 (4 tiếng):</span> <strong>125.000 VNĐ / Ca</strong></li>
+                </ul>
+            </div>
+
+            <div class="info-block">
+                <h3><i class="ri-gift-fill"></i> CHẾ ĐỘ LƯƠNG HÀNG TUẦN</h3>
+                <ul class="feature-list">
+                    <li><i class="ri-check-line"></i> Chốt công làm việc từ Thứ 2 – Chủ nhật.</li>
+                    <li><i class="ri-check-line"></i> Nhận lương đều đặn vào Thứ 6 tuần kế tiếp.</li>
+                </ul>
+            </div>
+
+            <div class="info-block">
+                <h3><i class="ri-briefcase-4-fill"></i> CÔNG VIỆC CHÍNH</h3>
+                <ul class="feature-list">
+                    <li><i class="ri-check-line"></i> Hỗ trợ lên/xuống hàng hóa.</li>
+                    <li><i class="ri-check-line"></i> Quét mã đơn hàng nhập kho.</li>
+                    <li><i class="ri-check-line"></i> Phân loại hàng hóa Tại Kho.</li>
+                    <li><i class="ri-check-line"></i> Hỗ trợ vận hành công việc khi được sắp xếp.</li>
+                </ul>
+            </div>
+
+            <div class="info-block">
+                <h3><i class="ri-user-star-fill"></i> YÊU CẦU ĐƠN GIẢN</h3>
+                <ul class="feature-list">
+                    <li><i class="ri-check-line"></i> Nam/Nữ, từ 18 – 35 tuổi. Sức khỏe tốt.</li>
+                    <li><i class="ri-check-line"></i> Bắt buộc: <b>Có CCCD gốc - VNID MỨC 2.</b></li>
+                    <li><i class="ri-check-line"></i> Không yêu cầu kinh nghiệm, được quản lý hướng dẫn.</li>
+                </ul>
+                <div class="warning-box">
+                    <i class="ri-error-warning-fill"></i>
+                    <div>
+                        <strong>Lưu ý quan trọng:</strong> 
+                        Lao động tham gia làm việc đều phải đóng bảo hiểm 100%. Nếu bạn đang tham gia BHXH công ty khác hoặc đang rút BHTN thì không thể tham gia.
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-info">
+                <p>Cần hỗ trợ? Nhắn tin Zalo:</p>
+                <div class="phones">
+                    <a href="https://zalo.me/0586482344" target="_blank"><i class="ri-whatsapp-fill"></i> 0586.482.344 (Tài)</a>
+                    <a href="https://zalo.me/0777690111" target="_blank"><i class="ri-whatsapp-fill"></i> 0777.690.111 (Trân)</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cột Form Ứng Tuyển -->
+        <div class="form-section glass-panel">
+            <h2>ĐIỀN THÔNG TIN ỨNG TUYỂN</h2>
+            <p class="form-subtitle">Điền đầy đủ thông tin bên dưới, hoặc sử dụng tính năng quét mã QR Căn Cước Công Dân để điền tự động.</p>
+
+            <button type="button" id="btnScanQR" class="btn-qr">
+                <i class="ri-qr-scan-2-line"></i> Quét mã QR CCCD
+            </button>
+
+            <!-- QR Scanner Modal -->
+            <div id="qrModal" class="qr-modal">
+                <div class="qr-modal-content glass-panel">
+                    <div class="qr-header">
+                        <h3>Quét mã QR trên CCCD</h3>
+                        <button type="button" id="btnCloseQR" class="btn-close-qr"><i class="ri-close-line"></i></button>
+                    </div>
+                    <div class="qr-custom-ui">
+                        <div id="reader"></div>
+                        <div class="qr-controls">
+                            <label class="btn-qr-upload">
+                                <i class="ri-image-add-line"></i> Tải ảnh từ thư viện
+                                <input type="file" id="qrInputFile" accept="image/*" style="display: none;">
+                            </label>
+                            <p class="qr-hint">Hoặc giơ mặt trước thẻ CCCD vào khung camera bên trên</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Khung iframe ẩn để gửi biểu mẫu không bị reload trang -->
+            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {window.location='?success=true';}"></iframe>
+            
+            <form id="applyForm" action="https://docs.google.com/forms/d/e/1FAIpQLSd3XseDNvnpvxjG9ay_r0fjlOLeNOlo9Wbll5gvaWlpbcABww/formResponse" method="POST" target="hidden_iframe">
+                
+                <!-- Bắt buộc điền ẩn cho Google Form -->
+                <input type="hidden" name="entry.479446949_year" value="2020">
+                <input type="hidden" name="entry.479446949_month" value="01">
+                <input type="hidden" name="entry.479446949_day" value="01">
+                <input type="hidden" name="entry.1889856184" value="BỘ CÔNG AN">
+
+                <div class="form-group">
+                    <label for="fullName">Họ và Tên *</label>
+                    <input type="text" id="fullName" name="entry.400419397" placeholder="Nhập in hoa có dấu (VD: NGUYỄN VĂN A)" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="gender">Giới tính *</label>
+                        <select id="gender" name="entry.1656052568" required>
+                            <option value="" disabled selected>Chọn giới tính</option>
+                            <option value="Nam">Nam</option>
+                            <option value="Nữ">Nữ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dob">Ngày/Tháng/Năm Sinh *</label>
+                        <input type="text" id="dob" name="entry.2090134030" placeholder="VD: 01/01/2000" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone">Số điện thoại Zalo của bạn *</label>
+                    <input type="tel" id="phone" name="entry.531147708" placeholder="Nhập số điện thoại Zalo" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cccd">Số Căn Cước Công Dân *</label>
+                        <input type="number" id="cccd" name="entry.1116838991" placeholder="Nhập 12 số CCCD" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="address">Địa chỉ thường trú (Theo CCCD) *</label>
+                    <input type="text" id="address" name="entry.1816975943" placeholder="Ghi theo căn cước công dân" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="currentAddress">Địa chỉ tạm trú *</label>
+                    <input type="text" id="currentAddress" name="entry.590641482" placeholder="Chỗ ở hiện tại của bạn" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="shift">Bạn đăng ký ca làm việc nào? *</label>
+                    <select id="shift" name="entry.1849515334" required>
+                        <option value="" disabled selected>Chọn ca làm việc</option>
+                        <option value="6H-15H - LƯƠNG 230K">6H-15H - LƯƠNG 230K</option>
+                        <option value="6H-10H - LƯƠNG 125K">6H-10H - LƯƠNG 125K</option>
+                        <option value="15H-22H - LƯƠNG 200K">15H-22H - LƯƠNG 200K</option>
+                        <option value="18H-22H - LƯƠNG 125K">18H-22H - LƯƠNG 125K</option>
+                        <option value="22H-6H - LƯƠNG 280K">22H-6H - LƯƠNG 280K</option>
+                    </select>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>Bạn có VNID Mức 2 không? *</label>
+                    <div class="radio-options">
+                        <label><input type="radio" name="entry.1059679510" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="entry.1059679510" value="KHÔNG"> KHÔNG</label>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>Bạn có đang tham gia BHXH bên CTY khác hoặc tự nguyện không? *</label>
+                    <div class="radio-options">
+                        <label><input type="radio" name="entry.374361314" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="entry.374361314" value="KHÔNG"> KHÔNG</label>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label>Bạn có đang lãnh Bảo Hiểm Thất Nghiệp không? *</label>
+                    <div class="radio-options">
+                        <label><input type="radio" name="entry.988164786" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="entry.988164786" value="KHÔNG"> KHÔNG</label>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn" class="btn-submit">
+                    <span>GỬI THÔNG TIN ỨNG TUYỂN</span>
+                    <i class="ri-arrow-right-line"></i>
+                </button>
+            </form>
+
+            <div id="successMessage" class="success-message" style="display: none;">
+                <div class="success-icon"><i class="ri-checkbox-circle-fill"></i></div>
+                <h3>Gửi thành công!</h3>
+                <p>Cảm ơn bạn đã đăng ký. Chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.</p>
+                <button onclick="window.location.href='index.html'" class="btn-refresh">Gửi đơn mới</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Admin Settings Modal -->
+    <div id="adminModal" class="qr-modal">
+        <div class="admin-modal-content glass-panel">
+            <div class="qr-header">
+                <h3>Cấu hình Admin</h3>
+                <button type="button" id="btnCloseAdmin" class="btn-close-qr"><i class="ri-close-line"></i></button>
+            </div>
+            
+            <div class="admin-settings-box">
+                <label><i class="ri-links-line"></i> Link Google Sheets</label>
+                <input type="text" id="sheetLinkInput" placeholder="https://docs.google.com/spreadsheets/d/.../edit" class="admin-input">
+                
+                <div class="admin-actions">
+                    <button type="button" id="btnSaveSheet" class="btn-save"><i class="ri-save-3-fill"></i> Lưu cấu hình</button>
+                    <button type="button" id="btnTestSheet" class="btn-test"><i class="ri-search-line"></i> Kiểm tra kết nối</button>
+                    <button type="button" id="btnDeleteSheet" class="btn-delete"><i class="ri-delete-bin-fill"></i> Xóa</button>
+                </div>
+                <p id="adminStatusText" class="admin-status"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nút Admin -->
+    <div class="admin-button" id="btnAdmin" title="Dành cho Quản trị viên">
+        <i class="ri-settings-4-fill"></i>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
