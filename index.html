@@ -115,7 +115,8 @@
                     </div>
                     <div class="qr-custom-ui">
                         <div id="reader"></div>
-                        <div class="qr-controls">
+                        
+                        <div class="qr-controls" id="qrControls">
                             <!-- Nút mở camera chụp ảnh gốc của máy -->
                             <label class="btn-qr-upload btn-qr-capture">
                                 <i class="ri-camera-lens-fill"></i> Mở Camera & Chụp
@@ -128,6 +129,13 @@
                                 <input type="file" id="qrInputFile" accept="image/*" style="display: none;">
                             </label>
                             <p class="qr-hint">Hoặc giơ mặt trước thẻ CCCD vào khung camera trực tiếp bên trên</p>
+                        </div>
+
+                        <!-- Khung xác nhận khi có ảnh -->
+                        <div class="qr-confirm-ui" id="qrConfirmUI" style="display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 10px;">
+                            <p style="color: #fff; font-size: 1.1rem; margin: 0;"><i class="ri-image-circle-line" style="color: #10b981; font-size: 1.5rem; vertical-align: middle;"></i> Đã chọn ảnh thành công!</p>
+                            <button type="button" id="btnConfirmScan" class="btn-qr-capture" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">Xác nhận Quét & Điền</button>
+                            <button type="button" id="btnCancelScan" class="btn-qr-upload" style="border-color: #ef4444; color: #fca5a5;">Hủy bỏ ảnh</button>
                         </div>
                     </div>
                 </div>

@@ -95,36 +95,87 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 
-    // Hàm xử lý file ảnh chung
+    const qrControls = document.getElementById('qrControls');
+    const qrConfirmUI = document.getElementById('qrConfirmUI');
+    const btnConfirmScan = document.getElementById('btnConfirmScan');
+    const btnCancelScan = document.getElementById('btnCancelScan');
+
+    let pendingImageFile = null;
+    let pendingEventTarget = null;
+
+    // Hàm xử lý khi người dùng chọn/chụp file
     function handleImageFile(e) {
         if (e.target.files.length == 0 || !html5QrCode) {
             return;
         }
-        const imageFile = e.target.files[0];
+        pendingImageFile = e.target.files[0];
+        pendingEventTarget = e.target;
 
-        const processFile = () => {
-            // Hiển thị trạng thái đang xử lý (tuỳ chọn)
-            document.getElementById('reader').innerHTML = '<div style="color:white; padding: 20px;">Đang xử lý ảnh, vui lòng chờ...</div>';
+        // Ẩn bảng điều khiển và camera, hiện UI xác nhận
+        if (qrControls) qrControls.style.display = 'none';
+        if (qrConfirmUI) qrConfirmUI.style.display = 'flex';
+        const readerDiv = document.getElementById('reader');
+        if (readerDiv) readerDiv.style.display = 'none';
+    }
 
-            html5QrCode.scanFile(imageFile, false)
-                .then(decodedText => {
-                    onScanSuccess(decodedText);
-                    e.target.value = ''; // Reset input
-                })
-                .catch(err => {
-                    alert("Không thể đọc được mã QR từ ảnh. Lời khuyên: Hãy chụp GẦN SÁT vào khu vực mã QR ở góc thẻ để ảnh rõ nét nhất!");
-                    console.log("Scan File Error: ", err);
-                    e.target.value = ''; // Reset input
-                    // Có thể gọi lại html5QrCode.start() ở đây nếu muốn
-                });
-        };
+    // Xử lý nút Hủy bỏ ảnh
+    if (btnCancelScan) {
+        btnCancelScan.addEventListener('click', () => {
+            resetConfirmUI();
+            if (pendingEventTarget) pendingEventTarget.value = '';
+            pendingImageFile = null;
+            pendingEventTarget = null;
+        });
+    }
 
-        // Nếu camera đang chạy, cần stop trước khi scan file để tránh xung đột thư viện
-        try {
-            html5QrCode.stop().then(processFile).catch(processFile);
-        } catch (error) {
-            processFile();
-        }
+    // Xử lý nút Xác nhận
+    if (btnConfirmScan) {
+        btnConfirmScan.addEventListener('click', () => {
+            if (!pendingImageFile) return;
+
+            const processFile = () => {
+                const readerDiv = document.getElementById('reader');
+                if (readerDiv) {
+                    readerDiv.style.display = 'block';
+                    readerDiv.innerHTML = '<div style="color:white; padding: 20px;">Đang xử lý ảnh, vui lòng chờ...</div>';
+                }
+                if (qrConfirmUI) qrConfirmUI.style.display = 'none';
+
+                html5QrCode.scanFile(pendingImageFile, false)
+                    .then(decodedText => {
+                        onScanSuccess(decodedText);
+                        if (pendingEventTarget) pendingEventTarget.value = '';
+                        resetConfirmUI();
+                    })
+                    .catch(err => {
+                        alert("Không thể đọc được mã QR từ ảnh. Lời khuyên: Hãy chụp GẦN SÁT vào khu vực mã QR ở góc thẻ để ảnh rõ nét nhất!");
+                        console.log("Scan File Error: ", err);
+                        if (pendingEventTarget) pendingEventTarget.value = '';
+                        resetConfirmUI();
+                    });
+            };
+
+            try {
+                if (html5QrCode.getState() === Html5QrcodeScannerState.SCANNING) {
+                    html5QrCode.stop().then(processFile).catch(processFile);
+                } else {
+                    processFile();
+                }
+            } catch (error) {
+                try {
+                    html5QrCode.stop().then(processFile).catch(processFile);
+                } catch (e) {
+                    processFile();
+                }
+            }
+        });
+    }
+
+    function resetConfirmUI() {
+        if (qrControls) qrControls.style.display = 'flex';
+        if (qrConfirmUI) qrConfirmUI.style.display = 'none';
+        const readerDiv = document.getElementById('reader');
+        if (readerDiv) readerDiv.style.display = 'block';
     }
 
     // Xử lý quét qua ảnh tải lên hoặc chụp từ camera
@@ -141,6 +192,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function closeScanner() {
         qrModal.classList.remove('show');
+        resetConfirmUI();
         if (html5QrCode) {
             try {
                 html5QrCode.stop().then(() => {
