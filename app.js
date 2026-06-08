@@ -20,7 +20,8 @@ document.addEventListener("DOMContentLoaded", function() {
             const sheetId = match[1];
             // Dùng Google Visualization API để đếm số dòng ở cột A (Cột Timestamp)
             // Thêm Date.now() để chống cache, đảm bảo số liệu cập nhật lập tức
-            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT count(A)&_nocache=${Date.now()}`;
+            const query = encodeURIComponent("SELECT count(A)");
+            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=${query}&_nocache=${Date.now()}`;
             
             fetch(queryUrl)
                 .then(res => res.text())
@@ -32,14 +33,14 @@ document.addEventListener("DOMContentLoaded", function() {
                         const totalRows = data.table.rows[0].c[0].v;
                         // Trừ 1 dòng tiêu đề
                         const count = totalRows > 0 ? totalRows - 1 : 0;
-                        if (count > 0) {
+                        if (count >= 0) {
                             countNumber.innerText = count;
-                            countBlock.style.display = 'inline-flex';
                         }
                     }
                 })
                 .catch(err => {
                     console.log("Cannot fetch count (có thể do sheet chưa bật chế độ public): ", err);
+                    countNumber.innerText = "N/A";
                 });
         }
     }
