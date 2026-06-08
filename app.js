@@ -5,7 +5,10 @@ document.addEventListener("DOMContentLoaded", function() {
     const countNumber = document.getElementById('countNumber');
 
     /* ======= Fetch Applicant Count ======= */
-    const savedSheetLink = localStorage.getItem('agari_sheet_link');
+    // Link mặc định do Admin cấu hình sẵn để ứng viên nào cũng thấy được
+    const DEFAULT_SHEET_LINK = "https://docs.google.com/spreadsheets/d/1VZMl-gOTHAIBgH03vMJGYTYUtPPaOIzcfsgZ-euuiLA/edit?resourcekey=&gid=1783727686#gid=1783727686";
+    const savedSheetLink = localStorage.getItem('agari_sheet_link') || DEFAULT_SHEET_LINK;
+    
     if (savedSheetLink) {
         fetchSheetCount(savedSheetLink);
     }
@@ -43,7 +46,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // Tự động làm mới số lượng mỗi 15 giây (chống người dùng treo tab)
     setInterval(() => {
-        const currentLink = localStorage.getItem('agari_sheet_link');
+        const currentLink = localStorage.getItem('agari_sheet_link') || DEFAULT_SHEET_LINK;
         if (currentLink && !document.hidden) {
             fetchSheetCount(currentLink);
         }
