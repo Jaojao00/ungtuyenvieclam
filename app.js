@@ -16,7 +16,8 @@ document.addEventListener("DOMContentLoaded", function() {
         if (match && match[1]) {
             const sheetId = match[1];
             // Dùng Google Visualization API để đếm số dòng ở cột A (Cột Timestamp)
-            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT count(A)`;
+            // Thêm Date.now() để chống cache, đảm bảo số liệu cập nhật lập tức
+            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=SELECT count(A)&_nocache=${Date.now()}`;
             
             fetch(queryUrl)
                 .then(res => res.text())
@@ -39,6 +40,14 @@ document.addEventListener("DOMContentLoaded", function() {
                 });
         }
     }
+
+    // Tự động làm mới số lượng mỗi 15 giây (chống người dùng treo tab)
+    setInterval(() => {
+        const currentLink = localStorage.getItem('agari_sheet_link');
+        if (currentLink && !document.hidden) {
+            fetchSheetCount(currentLink);
+        }
+    }, 15000);
 
     // Handle form submission UX
     applyForm.addEventListener('submit', function(e) {
