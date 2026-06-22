@@ -168,7 +168,7 @@
                     </div>
                     <div class="form-group">
                         <label for="dob">Ngày/Tháng/Năm Sinh *</label>
-                        <input type="text" id="dob" name="entry.2090134030" placeholder="VD: 01/01/2000" required>
+                        <input type="text" id="dob" name="entry.2090134030" placeholder="VD: 01/01/2000" pattern="^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$" title="Vui lòng nhập đúng định dạng DD/MM/YYYY (VD: 01/01/2000)" required>
                     </div>
                 </div>
 
@@ -239,8 +239,20 @@
             <div id="successMessage" class="success-message" style="display: none;">
                 <div class="success-icon"><i class="ri-checkbox-circle-fill"></i></div>
                 <h3>Gửi thành công!</h3>
-                <p>Cảm ơn bạn đã đăng ký. Chúng tôi sẽ liên hệ lại với bạn trong thời gian sớm nhất.</p>
+                <p>Cảm ơn bạn đã đăng ký. Chúng tôi sẽ lưu lại hồ sơ và liên hệ lại với bạn trong thời gian sớm nhất nếu có vị trí phù hợp.</p>
                 <button onclick="window.location.href='index.html'" class="btn-refresh">Gửi đơn mới</button>
+            </div>
+
+            <!-- Giao diện trúng tuyển đặc biệt -->
+            <div id="successMessageAccepted" class="success-message success-accepted" style="display: none;">
+                <div class="success-icon"><i class="ri-medal-fill"></i></div>
+                <h3>Chúc mừng bạn!</h3>
+                <p>Hồ sơ của bạn đã <strong>đủ điều kiện</strong> ứng tuyển!</p>
+                <p style="margin-bottom: 20px; font-weight: 500;">Dự kiến bạn sẽ nhận việc trong khoảng từ <strong>01/07 - 10/07</strong>. Vui lòng tham gia nhóm Zalo bên dưới để nhận thông tin hoặc liên hệ Quản lý ca.</p>
+                <a href="https://zalo.me/g/sqjgbx906" target="_blank" class="btn-zalo-group">
+                    <i class="ri-whatsapp-fill"></i> Tham gia nhóm Zalo
+                </a>
+                <button onclick="window.location.href='index.html'" class="btn-refresh" style="margin-top: 15px;">Quay lại trang chủ</button>
             </div>
 
         </div>

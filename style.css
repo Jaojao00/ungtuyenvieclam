@@ -688,3 +688,10 @@ body {
 .btn-qr-capture { background: linear-gradient(135deg, #10b981, #059669); border: none; font-size: 1.05rem; padding: 12px 20px; font-weight: 600; width: 100%; justify-content: center; margin-bottom: 5px; }
 .btn-qr-capture:hover { background: linear-gradient(135deg, #059669, #047857); }
 .btn-qr-upload { width: 100%; justify-content: center; }
+
+.success-accepted { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 16px; }
+.success-accepted .success-icon { color: #10b981; }
+.success-accepted h3 { color: #a7f3d0; }
+.btn-zalo-group { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; padding: 14px 24px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4); transition: transform 0.2s, box-shadow 0.2s; }
+.btn-zalo-group:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(37, 211, 102, 0.5); }
+
