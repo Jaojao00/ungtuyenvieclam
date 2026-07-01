@@ -372,6 +372,62 @@ document.addEventListener("DOMContentLoaded", function() {
                                     }
                                 }
 
+                                // 4. Tìm Giới tính
+                                for (let i = 0; i < lines.length; i++) {
+                                    const lowerLine = lines[i].toLowerCase();
+                                    if (lowerLine.includes('giới tính') || lowerLine.includes('sex') || lowerLine.includes('nam') || lowerLine.includes('nữ')) {
+                                        const genderInput = document.getElementById('gender');
+                                        if (genderInput) {
+                                            if (lowerLine.includes('nam')) {
+                                                genderInput.value = 'Nam';
+                                                hasData = true;
+                                            } else if (lowerLine.includes('nữ') || lowerLine.includes('nu')) {
+                                                genderInput.value = 'Nữ';
+                                                hasData = true;
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // 5. Tìm Địa chỉ (Nơi thường trú)
+                                let addressLines = [];
+                                let captureAddress = false;
+                                for (let i = 0; i < lines.length; i++) {
+                                    const lowerLine = lines[i].toLowerCase();
+                                    
+                                    // Dấu hiệu kết thúc phần địa chỉ
+                                    if (captureAddress && (lowerLine.includes('có giá trị') || lowerLine.includes('expiry') || lowerLine.includes('nơi cấp') || lowerLine.includes('giám đốc') || lowerLine.includes('cục trưởng'))) {
+                                        captureAddress = false;
+                                        break;
+                                    }
+
+                                    if (captureAddress && lines[i].trim().length > 3) {
+                                        addressLines.push(lines[i].trim());
+                                    }
+
+                                    // Bắt đầu chụp địa chỉ khi gặp "thường trú"
+                                    if (!captureAddress && (lowerLine.includes('thường trú') || lowerLine.includes('residence'))) {
+                                        captureAddress = true;
+                                        // Bóc tách text trên cùng dòng (nếu có)
+                                        let sameLine = lines[i].replace(/.*(thường trú|residence)[\s:;\|]*/i, '').trim();
+                                        if (sameLine.length > 3) {
+                                            addressLines.push(sameLine);
+                                        }
+                                    }
+                                }
+                                
+                                if (addressLines.length > 0) {
+                                    const addressInput = document.getElementById('address');
+                                    if (addressInput) {
+                                        // Lọc bớt ký tự rác
+                                        let finalAddress = addressLines.join(', ').replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/\.]/ig, '').replace(/\s+/g, ' ').trim();
+                                        // Xóa dấu phẩy thừa ở đầu nếu có
+                                        finalAddress = finalAddress.replace(/^[\,\s]+/, '');
+                                        addressInput.value = finalAddress;
+                                        hasData = true;
+                                    }
+                                }
+
                                 if (hasData) {
                                     alert("Đã đọc được chữ trên thẻ! Vui lòng KIỂM TRA LẠI và ĐIỀN NỐT các thông tin còn thiếu.");
                                 } else {
