@@ -309,7 +309,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 const readerDiv = document.getElementById('reader');
                 if (readerDiv) {
                     readerDiv.style.display = 'block';
-                    readerDiv.innerHTML = '<div style="color:white; padding: 20px;">Đang xử lý ảnh, vui lòng chờ...</div>';
+                    readerDiv.innerHTML = '<div style="color:white; padding: 20px; text-align: center;"><i class="ri-loader-4-line ri-spin" style="font-size: 24px;"></i><br/>Đang tìm mã QR...</div>';
                 }
                 if (qrConfirmUI) qrConfirmUI.style.display = 'none';
 
@@ -320,10 +320,77 @@ document.addEventListener("DOMContentLoaded", function() {
                         resetConfirmUI();
                     })
                     .catch(err => {
-                        alert("Không thể đọc được mã QR từ ảnh. Lời khuyên: Hãy chụp GẦN SÁT vào khu vực mã QR ở góc thẻ để ảnh rõ nét nhất!");
-                        console.log("Scan File Error: ", err);
-                        if (pendingEventTarget) pendingEventTarget.value = '';
-                        resetConfirmUI();
+                        console.log("Không tìm thấy QR, chuyển sang OCR... ", err);
+                        
+                        if (readerDiv) {
+                            readerDiv.innerHTML = '<div style="color:white; padding: 20px; text-align: center;"><i class="ri-focus-3-line ri-spin" style="font-size: 24px;"></i><br/>Đang đọc chữ trên thẻ (AI OCR)...<br/>Vui lòng chờ 5-10 giây...</div>';
+                        }
+
+                        // Fallback sang OCR bằng Tesseract.js
+                        if (typeof Tesseract !== 'undefined') {
+                            Tesseract.recognize(
+                                pendingImageFile,
+                                'vie',
+                                { logger: m => console.log(m) }
+                            ).then(({ data: { text } }) => {
+                                console.log("OCR Text Extracted:\n", text);
+                                
+                                let hasData = false;
+                                
+                                // 1. Tìm CCCD (12 số)
+                                const cccdMatch = text.match(/\b\d{12}\b/);
+                                if (cccdMatch) {
+                                    const cccdInput = document.getElementById('cccd');
+                                    if(cccdInput) { cccdInput.value = cccdMatch[0]; hasData = true; }
+                                }
+                                
+                                // 2. Tìm Ngày sinh (DD/MM/YYYY)
+                                const dobMatch = text.match(/\b(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}\b/);
+                                if (dobMatch) {
+                                    const dobInput = document.getElementById('dob');
+                                    if(dobInput) { dobInput.value = dobMatch[0]; hasData = true; }
+                                }
+                                
+                                // 3. Tìm Tên (Dựa vào chữ "Họ và tên")
+                                const lines = text.split('\n');
+                                for (let i = 0; i < lines.length; i++) {
+                                    if (lines[i].toLowerCase().includes('họ và tên') || lines[i].toLowerCase().includes('full name')) {
+                                        let possibleName = lines[i].replace(/(Họ và tên|Full name|:|;|\|)/gi, '').trim();
+                                        // Nếu dòng hiện tại rỗng (chỉ có title), thử dòng tiếp theo
+                                        if (!possibleName && i + 1 < lines.length) {
+                                            possibleName = lines[i+1].trim();
+                                        }
+                                        if (possibleName) {
+                                            const nameInput = document.getElementById('fullName');
+                                            // Dọn dẹp ký tự đặc biệt, lấy In Hoa
+                                            if (nameInput) {
+                                                nameInput.value = possibleName.replace(/[^a-zA-ZÀ-Ỹà-ỹ\s]/ig, '').trim().toUpperCase();
+                                                hasData = true;
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (hasData) {
+                                    alert("Đã đọc được chữ trên thẻ! Vui lòng KIỂM TRA LẠI và ĐIỀN NỐT các thông tin còn thiếu.");
+                                } else {
+                                    alert("Ảnh quá mờ, không thể đọc được thông tin. Vui lòng tự điền bằng tay!");
+                                }
+                                
+                                closeScanner();
+                                if (pendingEventTarget) pendingEventTarget.value = '';
+                            }).catch(ocrErr => {
+                                console.error("OCR Error:", ocrErr);
+                                alert("Đã có lỗi xảy ra khi đọc chữ. Vui lòng nhập bằng tay!");
+                                closeScanner();
+                                if (pendingEventTarget) pendingEventTarget.value = '';
+                            });
+                        } else {
+                            alert("Không thể đọc được mã QR và thư viện nhận diện chữ chưa tải xong. Vui lòng nhập bằng tay!");
+                            closeScanner();
+                            if (pendingEventTarget) pendingEventTarget.value = '';
+                        }
                     });
             };
 
