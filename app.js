@@ -428,6 +428,14 @@ document.addEventListener("DOMContentLoaded", function() {
                                     }
                                 }
 
+                                // 6. Đổ toàn bộ text thô ra giao diện cho user tự copy
+                                const rawOcrContainer = document.getElementById('rawOcrContainer');
+                                const rawOcrText = document.getElementById('rawOcrText');
+                                if (rawOcrContainer && rawOcrText) {
+                                    rawOcrText.value = text.trim();
+                                    rawOcrContainer.style.display = 'block';
+                                }
+
                                 if (hasData) {
                                     alert("Đã đọc được chữ trên thẻ! Vui lòng KIỂM TRA LẠI và ĐIỀN NỐT các thông tin còn thiếu.");
                                 } else {

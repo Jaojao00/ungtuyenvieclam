@@ -106,6 +106,12 @@
                 <i class="ri-qr-scan-2-line"></i> Quét mã QR CCCD
             </button>
 
+            <!-- Kết quả OCR thô (ẩn mặc định) -->
+            <div id="rawOcrContainer" class="form-group" style="display: none; margin-top: 15px;">
+                <label for="rawOcrText" style="color: #fca5a5;"><i class="ri-file-text-line"></i> Văn bản quét được (Copy nếu máy điền thiếu)</label>
+                <textarea id="rawOcrText" rows="5" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #e5e7eb; border-radius: 8px; resize: vertical; font-size: 0.9rem; margin-top: 5px;"></textarea>
+            </div>
+
             <!-- QR Scanner Modal -->
             <div id="qrModal" class="qr-modal">
                 <div class="qr-modal-content glass-panel">
