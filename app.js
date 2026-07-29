@@ -443,10 +443,12 @@ document.addEventListener("DOMContentLoaded", function() {
                     
                     if (rawOcrContainer && rawOcrText) {
                         const currentText = rawOcrText.value.trim();
+                        const extractedText = text.trim();
+                        
                         if (currentText) {
-                            rawOcrText.value = currentText + "\n" + text.trim();
+                            rawOcrText.value = currentText + "\n" + extractedText;
                         } else {
-                            rawOcrText.value = text.trim();
+                            rawOcrText.value = extractedText;
                         }
                         rawOcrContainer.style.display = 'block';
                         
@@ -457,6 +459,17 @@ document.addEventListener("DOMContentLoaded", function() {
                             rawOcrText.style.borderColor = 'rgba(255,255,255,0.1)';
                             rawOcrText.style.boxShadow = 'none';
                         }, 2000);
+                        
+                        // Copy thẳng vào bộ nhớ tạm (Giống hệt PowerToys Text Extractor)
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            navigator.clipboard.writeText(extractedText).then(() => {
+                                alert(`Đã COPY tự động:\n"${extractedText}"\n\nBạn có thể dán (Paste) thẳng vào form bên dưới, hoặc tiếp tục khoanh vùng khác.`);
+                            }).catch(err => {
+                                console.log('Không thể copy tự động', err);
+                            });
+                        } else {
+                            alert("Đã đọc xong! Vui lòng copy ở ô bên dưới.");
+                        }
                     }
                     
                     btnCropAndRead.innerHTML = originalText;
