@@ -352,12 +352,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         };
                         reader.readAsDataURL(pendingImageFile);
                     });
-                        } else {
-                            alert("Không thể đọc được mã QR và thư viện nhận diện chữ chưa tải xong. Vui lòng nhập bằng tay!");
-                            closeScanner();
-                            if (pendingEventTarget) pendingEventTarget.value = '';
-                        }
-                    });
             };
 
             try {
