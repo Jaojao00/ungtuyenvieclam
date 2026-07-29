@@ -432,6 +432,119 @@ document.addEventListener("DOMContentLoaded", function() {
                 ).then(({ data: { text } }) => {
                     console.log("Cropped OCR Text:\n", text);
                     
+                    let hasData = false;
+                    let filledFields = [];
+
+                    // 1. Tìm CCCD (12 số)
+                    const cccdMatch = text.match(/(?:^|\D)(\d{12})(?:\D|$)/);
+                    if (cccdMatch) {
+                        const cccdInput = document.getElementById('cccd');
+                        if (cccdInput && !cccdInput.value) { 
+                            cccdInput.value = cccdMatch[1]; 
+                            hasData = true; 
+                            filledFields.push("CCCD"); 
+                        }
+                    }
+
+                    // 2. Tìm Ngày sinh (DD/MM/YYYY)
+                    const dobMatch = text.match(/\b(0[1-9]|[12][0-9]|3[01])[\/\-\.](0[1-9]|1[012])[\/\-\.]\d{4}\b/);
+                    if (dobMatch) {
+                        const dobInput = document.getElementById('dob');
+                        if (dobInput && !dobInput.value) { 
+                            dobInput.value = dobMatch[0].replace(/[\-\.]/g, '/'); 
+                            hasData = true; 
+                            filledFields.push("Ngày sinh"); 
+                        }
+                    }
+
+                    // 3. Tìm Tên (Dựa vào chữ "Họ")
+                    const lines = text.split('\n');
+                    for (let i = 0; i < lines.length; i++) {
+                        const lower = lines[i].toLowerCase();
+                        if (lower.includes('họ') || lower.includes('name')) {
+                            let possibleName = lines[i].replace(/.*(họ và tên|họ vá tên|họ|tên|name)[\s:;\|\"\”\'\“]*/gi, '').trim();
+                            if (possibleName.length < 5 && i + 1 < lines.length) {
+                                possibleName = lines[i+1].trim();
+                            }
+                            possibleName = possibleName.replace(/[^a-zA-ZÀ-Ỹà-ỹ\s]/ig, '').replace(/\s+/g, ' ').trim().toUpperCase();
+                            const hasInvalidNameChars = /[FJWZ0-9]/i.test(possibleName);
+                            
+                            if (possibleName.length >= 5 && !hasInvalidNameChars) {
+                                const nameInput = document.getElementById('fullName');
+                                if (nameInput && !nameInput.value) {
+                                    nameInput.value = possibleName;
+                                    hasData = true;
+                                    filledFields.push("Họ Tên");
+                                }
+                                break;
+                            }
+                        }
+                    }
+
+                    // 4. Tìm Giới tính
+                    for (let i = 0; i < lines.length; i++) {
+                        const lowerLine = lines[i].toLowerCase();
+                        if (lowerLine.includes('giới tính') || lowerLine.includes('sex') || lowerLine.includes('nam') || lowerLine.includes('nữ')) {
+                            const genderInput = document.getElementById('gender');
+                            if (genderInput && !genderInput.value) {
+                                if (lowerLine.includes('nam')) {
+                                    genderInput.value = 'Nam';
+                                    hasData = true;
+                                    filledFields.push("Giới tính");
+                                } else if (lowerLine.includes('nữ') || lowerLine.includes('nu')) {
+                                    genderInput.value = 'Nữ';
+                                    hasData = true;
+                                    filledFields.push("Giới tính");
+                                }
+                            }
+                        }
+                    }
+
+                    // 5. Tìm Địa chỉ (Nơi thường trú)
+                    let addressLines = [];
+                    let captureAddress = false;
+                    for (let i = 0; i < lines.length; i++) {
+                        const lowerLine = lines[i].toLowerCase();
+                        
+                        if (captureAddress && (lowerLine.includes('có giá trị') || lowerLine.includes('expiry') || lowerLine.includes('nơi cấp') || lowerLine.includes('giám đốc') || lowerLine.includes('cục trưởng'))) {
+                            captureAddress = false;
+                            break;
+                        }
+
+                        if (captureAddress && lines[i].trim().length > 3) {
+                            addressLines.push(lines[i].trim());
+                        }
+
+                        if (!captureAddress && (lowerLine.includes('thường trú') || lowerLine.includes('residence'))) {
+                            captureAddress = true;
+                            // Sửa lỗi dính chữ place ofresidence
+                            let sameLine = lines[i].replace(/.*(nơi thường trú|thường trú|place\s*of\s*residence|place\s*of\s*xe|place\s*of|residence)[\s:;\|]*/ig, '').trim();
+                            if (sameLine.length > 3) {
+                                addressLines.push(sameLine);
+                            }
+                        }
+                    }
+                    
+                    if (addressLines.length > 0) {
+                        const addressInput = document.getElementById('address');
+                        if (addressInput && !addressInput.value) {
+                            let finalAddress = addressLines.join(', ');
+                            finalAddress = finalAddress.replace(/(nơi thường trú|thường trú|place\s*of\s*residence|place\s*of\s*xe|place\s*of|residence)[\s:;\|]*/ig, '');
+                            finalAddress = finalAddress.replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/]/ig, ' ');
+                            finalAddress = finalAddress.replace(/^[\,\-\/\s]+/, '').replace(/[\,\-\/\s]+$/, '');
+                            finalAddress = finalAddress.replace(/\s+/g, ' ').replace(/\s*\,\s*\,/g, ',').trim();
+                            
+                            const hasInvalidVietnameseChars = /[fjwz]/i.test(finalAddress);
+                            const hasTooManyNumbers = (finalAddress.match(/\d/g) || []).length > 6;
+
+                            if (finalAddress.length > 10 && !hasInvalidVietnameseChars && !hasTooManyNumbers) {
+                                addressInput.value = finalAddress;
+                                hasData = true;
+                                filledFields.push("Địa chỉ");
+                            }
+                        }
+                    }
+                    
                     const rawOcrContainer = document.getElementById('rawOcrContainer');
                     const rawOcrText = document.getElementById('rawOcrText');
                     
@@ -457,12 +570,20 @@ document.addEventListener("DOMContentLoaded", function() {
                         // Copy thẳng vào bộ nhớ tạm (Giống hệt PowerToys Text Extractor)
                         if (navigator.clipboard && navigator.clipboard.writeText) {
                             navigator.clipboard.writeText(extractedText).then(() => {
-                                alert(`Đã COPY tự động:\n"${extractedText}"\n\nBạn có thể dán (Paste) thẳng vào form bên dưới, hoặc tiếp tục khoanh vùng khác.`);
+                                let msg = `Đã COPY tự động:\n"${extractedText}"\n\nBạn có thể dán (Paste) thẳng vào form bên dưới, hoặc tiếp tục khoanh vùng khác.`;
+                                if (hasData) {
+                                    msg = `Tuyệt vời! Máy đã tự động chắt lọc thông tin và ĐIỀN XONG các ô: ${filledFields.join(', ')}.\n\nBên cạnh đó, văn bản gốc cũng đã được Copy vào bộ nhớ tạm.`;
+                                }
+                                alert(msg);
                             }).catch(err => {
                                 console.log('Không thể copy tự động', err);
                             });
                         } else {
-                            alert("Đã đọc xong! Vui lòng copy ở ô bên dưới.");
+                            if (hasData) {
+                                alert(`Đã đọc xong và tự động điền các ô: ${filledFields.join(', ')}.`);
+                            } else {
+                                alert("Đã đọc xong! Vui lòng copy ở ô bên dưới.");
+                            }
                         }
                     }
                     
