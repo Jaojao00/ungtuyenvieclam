@@ -338,10 +338,10 @@ document.addEventListener("DOMContentLoaded", function() {
                                 let hasData = false;
                                 
                                 // 1. Tìm CCCD (12 số)
-                                const cccdMatch = text.match(/\b\d{12}\b/);
+                                const cccdMatch = text.match(/(?:^|\D)(\d{12})(?:\D|$)/);
                                 if (cccdMatch) {
                                     const cccdInput = document.getElementById('cccd');
-                                    if(cccdInput) { cccdInput.value = cccdMatch[0]; hasData = true; }
+                                    if(cccdInput) { cccdInput.value = cccdMatch[1]; hasData = true; }
                                 }
                                 
                                 // 2. Tìm Ngày sinh (DD/MM/YYYY)
@@ -351,20 +351,25 @@ document.addEventListener("DOMContentLoaded", function() {
                                     if(dobInput) { dobInput.value = dobMatch[0]; hasData = true; }
                                 }
                                 
-                                // 3. Tìm Tên (Dựa vào chữ "Họ và tên")
+                                // 3. Tìm Tên (Dựa vào chữ "Họ")
                                 const lines = text.split('\n');
                                 for (let i = 0; i < lines.length; i++) {
-                                    if (lines[i].toLowerCase().includes('họ và tên') || lines[i].toLowerCase().includes('full name')) {
-                                        let possibleName = lines[i].replace(/(Họ và tên|Full name|:|;|\|)/gi, '').trim();
-                                        // Nếu dòng hiện tại rỗng (chỉ có title), thử dòng tiếp theo
-                                        if (!possibleName && i + 1 < lines.length) {
+                                    const lower = lines[i].toLowerCase();
+                                    if (lower.includes('họ') || lower.includes('name')) {
+                                        let possibleName = lines[i].replace(/.*(họ và tên|họ vá tên|họ|tên|name)[\s:;\|\"\”\'\“]*/gi, '').trim();
+                                        // Nếu tên quá ngắn hoặc rỗng (chỉ có title), lấy luôn dòng tiếp theo
+                                        if (possibleName.length < 5 && i + 1 < lines.length) {
                                             possibleName = lines[i+1].trim();
                                         }
-                                        if (possibleName) {
+                                        // Dọn dẹp ký tự đặc biệt và số
+                                        possibleName = possibleName.replace(/[^a-zA-ZÀ-Ỹà-ỹ\s]/ig, '').replace(/\s+/g, ' ').trim().toUpperCase();
+                                        // Tên người Việt không có F, J, W, Z
+                                        const hasInvalidNameChars = /[FJWZ0-9]/i.test(possibleName);
+                                        
+                                        if (possibleName.length >= 5 && !hasInvalidNameChars) {
                                             const nameInput = document.getElementById('fullName');
-                                            // Dọn dẹp ký tự đặc biệt, lấy In Hoa
                                             if (nameInput) {
-                                                nameInput.value = possibleName.replace(/[^a-zA-ZÀ-Ỹà-ỹ\s]/ig, '').trim().toUpperCase();
+                                                nameInput.value = possibleName;
                                                 hasData = true;
                                             }
                                             break;
@@ -408,7 +413,6 @@ document.addEventListener("DOMContentLoaded", function() {
                                     // Bắt đầu chụp địa chỉ khi gặp "thường trú"
                                     if (!captureAddress && (lowerLine.includes('thường trú') || lowerLine.includes('residence'))) {
                                         captureAddress = true;
-                                        // Bóc tách text trên cùng dòng (nếu có)
                                         let sameLine = lines[i].replace(/.*(thường trú|residence)[\s:;\|]*/i, '').trim();
                                         if (sameLine.length > 3) {
                                             addressLines.push(sameLine);
@@ -420,17 +424,16 @@ document.addEventListener("DOMContentLoaded", function() {
                                     const addressInput = document.getElementById('address');
                                     if (addressInput) {
                                         let finalAddress = addressLines.join(', ');
-                                        // Loại bỏ các nhãn bị đọc nhầm (VD: Place of xe, residence, ...)
                                         finalAddress = finalAddress.replace(/(nơi thường trú|thường trú|place of residence|place of xe|place of|residence)[\s:;\|]*/ig, '');
-                                        // Lọc bớt ký tự rác (chỉ giữ chữ cái, số, dấu phẩy, khoảng trắng, gạch ngang, gạch chéo)
                                         finalAddress = finalAddress.replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/]/ig, ' ');
-                                        // Xóa các dấu câu và khoảng trắng thừa ở 2 đầu
                                         finalAddress = finalAddress.replace(/^[\,\-\/\s]+/, '').replace(/[\,\-\/\s]+$/, '');
-                                        // Gom nhiều khoảng trắng hoặc dấu phẩy liên tiếp
                                         finalAddress = finalAddress.replace(/\s+/g, ' ').replace(/\s*\,\s*\,/g, ',').trim();
                                         
-                                        // Chỉ tự động điền nếu địa chỉ dài hơn 5 ký tự và không quá lộn xộn
-                                        if (finalAddress.length > 5) {
+                                        // Kiểm tra độ tin cậy của địa chỉ (Từ chối nếu chứa F, J, W, Z hoặc có quá nhiều số)
+                                        const hasInvalidVietnameseChars = /[fjwz]/i.test(finalAddress);
+                                        const hasTooManyNumbers = (finalAddress.match(/\d/g) || []).length > 6;
+
+                                        if (finalAddress.length > 10 && !hasInvalidVietnameseChars && !hasTooManyNumbers) {
                                             addressInput.value = finalAddress;
                                             hasData = true;
                                         }
