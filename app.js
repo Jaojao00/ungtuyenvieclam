@@ -339,12 +339,12 @@ document.addEventListener("DOMContentLoaded", function() {
                             if (cropperInstance) cropperInstance.destroy();
                             cropperInstance = new Cropper(cropperImage, {
                                 viewMode: 1,
-                                dragMode: 'move',
-                                autoCropArea: 0.5,
+                                dragMode: 'crop',
+                                autoCropArea: 0.2, // Thu nhỏ khung mặc định chỉ còn 20%
                                 restore: false,
                                 guides: true,
                                 center: true,
-                                highlight: false,
+                                highlight: true,
                                 cropBoxMovable: true,
                                 cropBoxResizable: true,
                                 toggleDragModeOnDblclick: false,
