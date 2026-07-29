@@ -419,12 +419,21 @@ document.addEventListener("DOMContentLoaded", function() {
                                 if (addressLines.length > 0) {
                                     const addressInput = document.getElementById('address');
                                     if (addressInput) {
-                                        // Lọc bớt ký tự rác
-                                        let finalAddress = addressLines.join(', ').replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/\.]/ig, '').replace(/\s+/g, ' ').trim();
-                                        // Xóa dấu phẩy thừa ở đầu nếu có
-                                        finalAddress = finalAddress.replace(/^[\,\s]+/, '');
-                                        addressInput.value = finalAddress;
-                                        hasData = true;
+                                        let finalAddress = addressLines.join(', ');
+                                        // Loại bỏ các nhãn bị đọc nhầm (VD: Place of xe, residence, ...)
+                                        finalAddress = finalAddress.replace(/(nơi thường trú|thường trú|place of residence|place of xe|place of|residence)[\s:;\|]*/ig, '');
+                                        // Lọc bớt ký tự rác (chỉ giữ chữ cái, số, dấu phẩy, khoảng trắng, gạch ngang, gạch chéo)
+                                        finalAddress = finalAddress.replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/]/ig, ' ');
+                                        // Xóa các dấu câu và khoảng trắng thừa ở 2 đầu
+                                        finalAddress = finalAddress.replace(/^[\,\-\/\s]+/, '').replace(/[\,\-\/\s]+$/, '');
+                                        // Gom nhiều khoảng trắng hoặc dấu phẩy liên tiếp
+                                        finalAddress = finalAddress.replace(/\s+/g, ' ').replace(/\s*\,\s*\,/g, ',').trim();
+                                        
+                                        // Chỉ tự động điền nếu địa chỉ dài hơn 5 ký tự và không quá lộn xộn
+                                        if (finalAddress.length > 5) {
+                                            addressInput.value = finalAddress;
+                                            hasData = true;
+                                        }
                                     }
                                 }
 
