@@ -271,6 +271,13 @@ document.addEventListener("DOMContentLoaded", function() {
     const qrConfirmUI = document.getElementById('qrConfirmUI');
     const btnConfirmScan = document.getElementById('btnConfirmScan');
     const btnCancelScan = document.getElementById('btnCancelScan');
+    
+    // Cropper elements
+    const cropperUI = document.getElementById('cropperUI');
+    const cropperImage = document.getElementById('cropperImage');
+    const btnCropAndRead = document.getElementById('btnCropAndRead');
+    const btnCancelCropper = document.getElementById('btnCancelCropper');
+    let cropperInstance = null;
 
     let pendingImageFile = null;
     let pendingEventTarget = null;
@@ -320,148 +327,31 @@ document.addEventListener("DOMContentLoaded", function() {
                         resetConfirmUI();
                     })
                     .catch(err => {
-                        console.log("Không tìm thấy QR, chuyển sang OCR... ", err);
+                        console.log("Không tìm thấy QR, chuyển sang khoanh vùng (Cropper)... ", err);
                         
-                        if (readerDiv) {
-                            readerDiv.innerHTML = '<div style="color:white; padding: 20px; text-align: center;"><i class="ri-focus-3-line ri-spin" style="font-size: 24px;"></i><br/>Đang đọc chữ trên thẻ (AI OCR)...<br/>Vui lòng chờ 5-10 giây...</div>';
-                        }
-
-                        // Fallback sang OCR bằng Tesseract.js
-                        if (typeof Tesseract !== 'undefined') {
-                            Tesseract.recognize(
-                                pendingImageFile,
-                                'vie',
-                                { logger: m => console.log(m) }
-                            ).then(({ data: { text } }) => {
-                                console.log("OCR Text Extracted:\n", text);
-                                
-                                let hasData = false;
-                                
-                                // 1. Tìm CCCD (12 số)
-                                const cccdMatch = text.match(/(?:^|\D)(\d{12})(?:\D|$)/);
-                                if (cccdMatch) {
-                                    const cccdInput = document.getElementById('cccd');
-                                    if(cccdInput) { cccdInput.value = cccdMatch[1]; hasData = true; }
-                                }
-                                
-                                // 2. Tìm Ngày sinh (DD/MM/YYYY)
-                                const dobMatch = text.match(/\b(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}\b/);
-                                if (dobMatch) {
-                                    const dobInput = document.getElementById('dob');
-                                    if(dobInput) { dobInput.value = dobMatch[0]; hasData = true; }
-                                }
-                                
-                                // 3. Tìm Tên (Dựa vào chữ "Họ")
-                                const lines = text.split('\n');
-                                for (let i = 0; i < lines.length; i++) {
-                                    const lower = lines[i].toLowerCase();
-                                    if (lower.includes('họ') || lower.includes('name')) {
-                                        let possibleName = lines[i].replace(/.*(họ và tên|họ vá tên|họ|tên|name)[\s:;\|\"\”\'\“]*/gi, '').trim();
-                                        // Nếu tên quá ngắn hoặc rỗng (chỉ có title), lấy luôn dòng tiếp theo
-                                        if (possibleName.length < 5 && i + 1 < lines.length) {
-                                            possibleName = lines[i+1].trim();
-                                        }
-                                        // Dọn dẹp ký tự đặc biệt và số
-                                        possibleName = possibleName.replace(/[^a-zA-ZÀ-Ỹà-ỹ\s]/ig, '').replace(/\s+/g, ' ').trim().toUpperCase();
-                                        // Tên người Việt không có F, J, W, Z
-                                        const hasInvalidNameChars = /[FJWZ0-9]/i.test(possibleName);
-                                        
-                                        if (possibleName.length >= 5 && !hasInvalidNameChars) {
-                                            const nameInput = document.getElementById('fullName');
-                                            if (nameInput) {
-                                                nameInput.value = possibleName;
-                                                hasData = true;
-                                            }
-                                            break;
-                                        }
-                                    }
-                                }
-
-                                // 4. Tìm Giới tính
-                                for (let i = 0; i < lines.length; i++) {
-                                    const lowerLine = lines[i].toLowerCase();
-                                    if (lowerLine.includes('giới tính') || lowerLine.includes('sex') || lowerLine.includes('nam') || lowerLine.includes('nữ')) {
-                                        const genderInput = document.getElementById('gender');
-                                        if (genderInput) {
-                                            if (lowerLine.includes('nam')) {
-                                                genderInput.value = 'Nam';
-                                                hasData = true;
-                                            } else if (lowerLine.includes('nữ') || lowerLine.includes('nu')) {
-                                                genderInput.value = 'Nữ';
-                                                hasData = true;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                // 5. Tìm Địa chỉ (Nơi thường trú)
-                                let addressLines = [];
-                                let captureAddress = false;
-                                for (let i = 0; i < lines.length; i++) {
-                                    const lowerLine = lines[i].toLowerCase();
-                                    
-                                    // Dấu hiệu kết thúc phần địa chỉ
-                                    if (captureAddress && (lowerLine.includes('có giá trị') || lowerLine.includes('expiry') || lowerLine.includes('nơi cấp') || lowerLine.includes('giám đốc') || lowerLine.includes('cục trưởng'))) {
-                                        captureAddress = false;
-                                        break;
-                                    }
-
-                                    if (captureAddress && lines[i].trim().length > 3) {
-                                        addressLines.push(lines[i].trim());
-                                    }
-
-                                    // Bắt đầu chụp địa chỉ khi gặp "thường trú"
-                                    if (!captureAddress && (lowerLine.includes('thường trú') || lowerLine.includes('residence'))) {
-                                        captureAddress = true;
-                                        let sameLine = lines[i].replace(/.*(thường trú|residence)[\s:;\|]*/i, '').trim();
-                                        if (sameLine.length > 3) {
-                                            addressLines.push(sameLine);
-                                        }
-                                    }
-                                }
-                                
-                                if (addressLines.length > 0) {
-                                    const addressInput = document.getElementById('address');
-                                    if (addressInput) {
-                                        let finalAddress = addressLines.join(', ');
-                                        finalAddress = finalAddress.replace(/(nơi thường trú|thường trú|place of residence|place of xe|place of|residence)[\s:;\|]*/ig, '');
-                                        finalAddress = finalAddress.replace(/[^a-zA-Z0-9À-Ỹà-ỹ\s\,\-\/]/ig, ' ');
-                                        finalAddress = finalAddress.replace(/^[\,\-\/\s]+/, '').replace(/[\,\-\/\s]+$/, '');
-                                        finalAddress = finalAddress.replace(/\s+/g, ' ').replace(/\s*\,\s*\,/g, ',').trim();
-                                        
-                                        // Kiểm tra độ tin cậy của địa chỉ (Từ chối nếu chứa F, J, W, Z hoặc có quá nhiều số)
-                                        const hasInvalidVietnameseChars = /[fjwz]/i.test(finalAddress);
-                                        const hasTooManyNumbers = (finalAddress.match(/\d/g) || []).length > 6;
-
-                                        if (finalAddress.length > 10 && !hasInvalidVietnameseChars && !hasTooManyNumbers) {
-                                            addressInput.value = finalAddress;
-                                            hasData = true;
-                                        }
-                                    }
-                                }
-
-                                // 6. Đổ toàn bộ text thô ra giao diện cho user tự copy
-                                const rawOcrContainer = document.getElementById('rawOcrContainer');
-                                const rawOcrText = document.getElementById('rawOcrText');
-                                if (rawOcrContainer && rawOcrText) {
-                                    rawOcrText.value = text.trim();
-                                    rawOcrContainer.style.display = 'block';
-                                }
-
-                                if (hasData) {
-                                    alert("Đã đọc được chữ trên thẻ! Vui lòng KIỂM TRA LẠI và ĐIỀN NỐT các thông tin còn thiếu.");
-                                } else {
-                                    alert("Ảnh quá mờ, không thể đọc được thông tin. Vui lòng tự điền bằng tay!");
-                                }
-                                
-                                closeScanner();
-                                if (pendingEventTarget) pendingEventTarget.value = '';
-                            }).catch(ocrErr => {
-                                console.error("OCR Error:", ocrErr);
-                                alert("Đã có lỗi xảy ra khi đọc chữ. Vui lòng nhập bằng tay!");
-                                closeScanner();
-                                if (pendingEventTarget) pendingEventTarget.value = '';
+                        if (readerDiv) readerDiv.style.display = 'none';
+                        if (cropperUI) cropperUI.style.display = 'flex';
+                        
+                        // Khởi tạo Cropper
+                        const reader = new FileReader();
+                        reader.onload = (e) => {
+                            cropperImage.src = e.target.result;
+                            if (cropperInstance) cropperInstance.destroy();
+                            cropperInstance = new Cropper(cropperImage, {
+                                viewMode: 1,
+                                dragMode: 'move',
+                                autoCropArea: 0.5,
+                                restore: false,
+                                guides: true,
+                                center: true,
+                                highlight: false,
+                                cropBoxMovable: true,
+                                cropBoxResizable: true,
+                                toggleDragModeOnDblclick: false,
                             });
+                        };
+                        reader.readAsDataURL(pendingImageFile);
+                    });
                         } else {
                             alert("Không thể đọc được mã QR và thư viện nhận diện chữ chưa tải xong. Vui lòng nhập bằng tay!");
                             closeScanner();
@@ -489,6 +379,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function resetConfirmUI() {
         if (qrControls) qrControls.style.display = 'flex';
         if (qrConfirmUI) qrConfirmUI.style.display = 'none';
+        if (cropperUI) cropperUI.style.display = 'none';
         const readerDiv = document.getElementById('reader');
         if (readerDiv) readerDiv.style.display = 'block';
     }
@@ -508,6 +399,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function closeScanner() {
         qrModal.classList.remove('show');
         resetConfirmUI();
+        if (cropperInstance) {
+            cropperInstance.destroy();
+            cropperInstance = null;
+        }
         if (html5QrCode) {
             try {
                 html5QrCode.stop().then(() => {
@@ -519,6 +414,65 @@ document.addEventListener("DOMContentLoaded", function() {
                 html5QrCode.clear();
             }
         }
+    }
+    
+    // Xử lý sự kiện nút Đọc vùng đã chọn (Cropper OCR)
+    if (btnCropAndRead) {
+        btnCropAndRead.addEventListener('click', () => {
+            if (!cropperInstance) return;
+            
+            const canvas = cropperInstance.getCroppedCanvas();
+            if (!canvas) return;
+            
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            
+            const originalText = btnCropAndRead.innerHTML;
+            btnCropAndRead.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Đang đọc...';
+            btnCropAndRead.disabled = true;
+            
+            if (typeof Tesseract !== 'undefined') {
+                Tesseract.recognize(
+                    dataUrl,
+                    'vie',
+                    { logger: m => console.log(m) }
+                ).then(({ data: { text } }) => {
+                    console.log("Cropped OCR Text:\n", text);
+                    
+                    const rawOcrContainer = document.getElementById('rawOcrContainer');
+                    const rawOcrText = document.getElementById('rawOcrText');
+                    
+                    if (rawOcrContainer && rawOcrText) {
+                        const currentText = rawOcrText.value.trim();
+                        if (currentText) {
+                            rawOcrText.value = currentText + "\n" + text.trim();
+                        } else {
+                            rawOcrText.value = text.trim();
+                        }
+                        rawOcrContainer.style.display = 'block';
+                        
+                        rawOcrText.style.transition = 'all 0.3s ease';
+                        rawOcrText.style.borderColor = '#10b981';
+                        rawOcrText.style.boxShadow = '0 0 10px rgba(16,185,129,0.5)';
+                        setTimeout(() => { 
+                            rawOcrText.style.borderColor = 'rgba(255,255,255,0.1)';
+                            rawOcrText.style.boxShadow = 'none';
+                        }, 2000);
+                    }
+                    
+                    btnCropAndRead.innerHTML = originalText;
+                    btnCropAndRead.disabled = false;
+                }).catch(ocrErr => {
+                    console.error("OCR Error:", ocrErr);
+                    alert("Lỗi đọc chữ!");
+                    btnCropAndRead.innerHTML = originalText;
+                    btnCropAndRead.disabled = false;
+                });
+            }
+        });
+    }
+
+    if (btnCancelCropper) {
+        btnCancelCropper.addEventListener('click', closeScanner);
     }
 
     function onScanSuccess(decodedText) {
