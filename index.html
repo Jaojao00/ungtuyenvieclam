@@ -12,11 +12,6 @@
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="style.css">
-    <!-- QR Scanner -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- Cropper.js -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 </head>
 <body>
     <div class="background-shapes">
@@ -104,63 +99,6 @@
         <div class="form-section glass-panel">
             <h2>ĐIỀN THÔNG TIN ỨNG TUYỂN</h2>
             <p class="form-subtitle">Điền đầy đủ thông tin bên dưới, hoặc sử dụng tính năng quét mã QR Căn Cước Công Dân để điền tự động.</p>
-
-            <button type="button" id="btnScanQR" class="btn-qr">
-                <i class="ri-qr-scan-2-line"></i> Quét mã QR CCCD
-            </button>
-
-            <!-- Kết quả OCR thô (ẩn mặc định) -->
-            <div id="rawOcrContainer" class="form-group" style="display: none; margin-top: 15px;">
-                <label for="rawOcrText" style="color: #fca5a5;"><i class="ri-file-text-line"></i> Văn bản quét được (Copy nếu máy điền thiếu)</label>
-                <textarea id="rawOcrText" rows="5" readonly style="width: 100%; padding: 10px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #e5e7eb; border-radius: 8px; resize: vertical; font-size: 0.9rem; margin-top: 5px;"></textarea>
-            </div>
-
-            <!-- QR Scanner Modal -->
-            <div id="qrModal" class="qr-modal">
-                <div class="qr-modal-content glass-panel">
-                    <div class="qr-header">
-                        <h3>Quét mã QR trên CCCD</h3>
-                        <button type="button" id="btnCloseQR" class="btn-close-qr"><i class="ri-close-line"></i></button>
-                    </div>
-                    <div class="qr-custom-ui">
-                        <div id="reader"></div>
-                        
-                        <div class="qr-controls" id="qrControls">
-                            <!-- Nút mở camera chụp ảnh gốc của máy -->
-                            <label class="btn-qr-upload btn-qr-capture">
-                                <i class="ri-camera-lens-fill"></i> Mở Camera & Chụp
-                                <input type="file" id="qrCaptureFile" accept="image/*" capture="environment" style="display: none;">
-                            </label>
-
-                            <!-- Nút chọn từ thư viện ảnh -->
-                            <label class="btn-qr-upload">
-                                <i class="ri-image-add-line"></i> Chọn ảnh từ thư viện
-                                <input type="file" id="qrInputFile" accept="image/*" style="display: none;">
-                            </label>
-                            <p class="qr-hint">Hoặc giơ mặt trước thẻ CCCD vào khung camera trực tiếp bên trên</p>
-                        </div>
-
-                        <!-- Khung xác nhận khi có ảnh -->
-                        <div class="qr-confirm-ui" id="qrConfirmUI" style="display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 10px;">
-                            <p style="color: #fff; font-size: 1.1rem; margin: 0;"><i class="ri-image-circle-line" style="color: #10b981; font-size: 1.5rem; vertical-align: middle;"></i> Đã chọn ảnh thành công!</p>
-                            <button type="button" id="btnConfirmScan" class="btn-qr-capture" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">Xác nhận Quét & Điền</button>
-                            <button type="button" id="btnCancelScan" class="btn-qr-upload" style="border-color: #ef4444; color: #fca5a5;">Hủy bỏ ảnh</button>
-                        </div>
-
-                        <!-- Khung Cropper (Khoanh vùng) -->
-                        <div class="cropper-ui" id="cropperUI" style="display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 10px; width: 100%;">
-                            <p style="color: #fca5a5; font-size: 0.95rem; text-align: center; margin: 0;">Không tìm thấy QR! Vui lòng dùng tay <strong>bôi đen (khoanh vùng)</strong> đoạn chữ bạn muốn copy (VD: Địa chỉ) rồi bấm nút bên dưới.</p>
-                            <div style="width: 100%; max-height: 400px; background: #000; overflow: hidden; border-radius: 8px;">
-                                <img id="cropperImage" src="" style="max-width: 100%; display: block;">
-                            </div>
-                            <div style="display: flex; gap: 10px; width: 100%;">
-                                <button type="button" id="btnCropAndRead" class="btn-qr-capture" style="flex: 1; background: linear-gradient(135deg, #10b981, #059669);"><i class="ri-text-snippet"></i> Đọc vùng đã chọn</button>
-                                <button type="button" id="btnCancelCropper" class="btn-qr-upload" style="flex: 1; border-color: #ef4444; color: #fca5a5;">Đóng</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             <!-- Khung iframe ẩn để gửi biểu mẫu không bị reload trang -->
             <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {window.location='?success=true';}"></iframe>
@@ -306,7 +244,6 @@
         <i class="ri-settings-4-fill"></i>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
