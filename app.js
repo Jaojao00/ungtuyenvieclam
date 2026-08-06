@@ -53,19 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }, 15000);
 
-    // Hàm parse ngày sinh DD/MM/YYYY để tính tuổi
-    function calculateAge(dobString) {
-        const parts = dobString.split('/');
-        if (parts.length !== 3) return 0;
-        const dob = new Date(parts[2], parts[1] - 1, parts[0]);
-        const today = new Date();
-        let age = today.getFullYear() - dob.getFullYear();
-        const m = today.getMonth() - dob.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
-            age--;
-        }
-        return age;
-    }
+
 
     // Hàm kiểm tra trùng lặp thông qua Google Sheet Visualization API
     async function checkDuplicate(phone, cccd) {
@@ -94,8 +82,6 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
-    // Biến lưu trạng thái trúng tuyển
-    let isAccepted = false;
 
     // Xử lý Validation và Submit
     submitBtn.addEventListener('click', async function(e) {
@@ -164,28 +150,7 @@ document.addEventListener("DOMContentLoaded", function() {
             return; // Dừng lại, không submit
         }
 
-        // --- Kiểm tra điều kiện trúng tuyển ---
-        // Tuổi: 18 - 35
-        const age = calculateAge(dobInput.value.trim());
-        const isAgeValid = (age >= 18 && age <= 35);
-        
-        // VNID Mức 2 = CÓ
-        const vnidOption = applyForm.querySelector('input[name="entry.1059679510"]:checked');
-        const hasVnid = vnidOption && vnidOption.value === "CÓ";
 
-        // Đang tham gia BHXH bên khác = KHÔNG
-        const bhxhOption = applyForm.querySelector('input[name="entry.374361314"]:checked');
-        const noBhxh = bhxhOption && bhxhOption.value === "KHÔNG";
-
-        // Đang lãnh BHTN = KHÔNG
-        const bhtnOption = applyForm.querySelector('input[name="entry.988164786"]:checked');
-        const noBhtn = bhtnOption && bhtnOption.value === "KHÔNG";
-
-        if (isAgeValid && hasVnid && noBhxh && noBhtn) {
-            isAccepted = true;
-        } else {
-            isAccepted = false;
-        }
 
         // Gửi form đi
         submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> <span>ĐANG GỬI...</span>';
@@ -206,16 +171,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const btnScanQR = document.getElementById('btnScanQR');
         if (btnScanQR) btnScanQR.style.display = 'none';
 
-        // Check isAccepted via localStorage (vì đã reload trang)
-        const wasAccepted = localStorage.getItem('agari_last_accepted');
-        if (wasAccepted === 'true') {
-            document.getElementById('successMessageAccepted').style.display = 'flex';
-        } else {
-            document.getElementById('successMessage').style.display = 'flex';
-        }
-        
-        // Clear flag after showing
-        localStorage.removeItem('agari_last_accepted');
+        document.getElementById('successMessage').style.display = 'flex';
+
     }
 
     // Chặn iframe load event để set localStorage trước khi reload
@@ -224,7 +181,6 @@ document.addEventListener("DOMContentLoaded", function() {
         iframe.addEventListener('load', function() {
             // Iframe load có thể xảy ra khi trang mới mở, nên chỉ xử lý khi đang submit
             if (submitBtn.innerHTML.includes('ĐANG GỬI')) {
-                localStorage.setItem('agari_last_accepted', isAccepted ? 'true' : 'false');
                 window.location = '?success=true';
             }
         });
