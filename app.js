@@ -1,91 +1,109 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getFirestore, collection, addDoc, query, where, getDocs, getCountFromServer, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD0C8eegdDsbkPW6hW8ggKzIoGCeXH-pHQ",
+  authDomain: "agari-tuyen-dung.firebaseapp.com",
+  projectId: "agari-tuyen-dung",
+  storageBucket: "agari-tuyen-dung.firebasestorage.app",
+  messagingSenderId: "649100852559",
+  appId: "1:649100852559:web:a147430d1fcaccccc4993a",
+  measurementId: "G-B5WWFQ6CZG"
+};
+
+// Khởi tạo Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const applicantsCollection = collection(db, "applicants");
+
 document.addEventListener("DOMContentLoaded", function() {
     const applyForm = document.getElementById('applyForm');
     const submitBtn = document.getElementById('submitBtn');
-    const countBlock = document.getElementById('applicantCountBlock');
     const countNumber = document.getElementById('countNumber');
-
-    /* ======= Fetch Applicant Count ======= */
-    // Link mặc định do Admin cấu hình sẵn để ứng viên nào cũng thấy được
-    const DEFAULT_SHEET_LINK = "https://docs.google.com/spreadsheets/d/1VZMl-gOTHAIBgH03vMJGYTYUtPPaOIzcfsgZ-euuiLA/edit?resourcekey=&gid=1783727686#gid=1783727686";
-    const savedSheetLink = localStorage.getItem('agari_sheet_link') || DEFAULT_SHEET_LINK;
     
-    if (savedSheetLink) {
-        fetchSheetCount(savedSheetLink);
-    }
+    // Ẩn nút Admin cũ vì giờ quản lý trên Firebase
+    const btnAdmin = document.getElementById('btnAdmin');
+    if (btnAdmin) btnAdmin.style.display = 'none';
 
-    function fetchSheetCount(url) {
-        // Trích xuất Sheet ID từ URL
-        const match = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        if (match && match[1]) {
-            const sheetId = match[1];
-            // Dùng Google Visualization API để đếm số dòng ở cột A (Cột Timestamp)
-            // Thêm Date.now() để chống cache, đảm bảo số liệu cập nhật lập tức
-            const query = encodeURIComponent("SELECT count(A)");
-            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=${query}&gid=1783727686&_nocache=${Date.now()}`;
-            
-            fetch(queryUrl)
-                .then(res => res.text())
-                .then(text => {
-                    // API trả về json bọc trong text, cần cắt chuỗi
-                    const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-                    const data = JSON.parse(jsonStr);
-                    if (data && data.table && data.table.rows.length > 0) {
-                        const totalRows = data.table.rows[0].c[0].v;
-                        // Trừ 1 dòng tiêu đề
-                        const count = totalRows > 0 ? totalRows - 1 : 0;
-                        if (count >= 0) {
-                            countNumber.innerText = count;
-                        }
-                    }
-                })
-                .catch(err => {
-                    console.log("Cannot fetch count (có thể do sheet chưa bật chế độ public): ", err);
-                    countNumber.innerText = "N/A";
-                });
+    /* ======= Fetch Applicant Count từ Firebase ======= */
+    async function fetchApplicantCount() {
+        try {
+            const snapshot = await getCountFromServer(applicantsCollection);
+            countNumber.innerText = snapshot.data().count;
+        } catch (error) {
+            console.error("Lỗi khi đếm số lượng:", error);
+            countNumber.innerText = "N/A";
         }
     }
 
-    // Tự động làm mới số lượng mỗi 15 giây (chống người dùng treo tab)
+    // Đếm lần đầu
+    fetchApplicantCount();
+
+    // Tự động làm mới số lượng mỗi 15 giây
     setInterval(() => {
-        const currentLink = localStorage.getItem('agari_sheet_link') || DEFAULT_SHEET_LINK;
-        if (currentLink && !document.hidden) {
-            fetchSheetCount(currentLink);
+        if (!document.hidden) {
+            fetchApplicantCount();
         }
     }, 15000);
 
 
-
-    // Hàm kiểm tra trùng lặp thông qua Google Sheet Visualization API
+    /* ======= Hàm kiểm tra trùng lặp qua Firestore ======= */
     async function checkDuplicate(phone, cccd) {
         try {
-            const currentLink = localStorage.getItem('agari_sheet_link') || DEFAULT_SHEET_LINK;
-            const match = currentLink.match(/\/d\/([a-zA-Z0-9-_]+)/);
-            if (!match) return false;
-            const sheetId = match[1];
-            
-            // Tìm trong Cột F (CCCD) hoặc Cột I (Số ĐT) - Giả định dựa vào cấu trúc hiện tại
-            const query = encodeURIComponent(`SELECT F, I WHERE F='${cccd}' OR I='${phone}'`);
-            const queryUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&tq=${query}&gid=1783727686&_nocache=${Date.now()}`;
-            
-            const res = await fetch(queryUrl);
-            const text = await res.text();
-            const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-            const data = JSON.parse(jsonStr);
-            
-            if (data && data.table && data.table.rows && data.table.rows.length > 0) {
-                return true; // Có trùng lặp
-            }
+            // Kiểm tra CCCD
+            const qCccd = query(applicantsCollection, where("cccd", "==", cccd));
+            const snapshotCccd = await getDocs(qCccd);
+            if (!snapshotCccd.empty) return true;
+
+            // Kiểm tra SĐT
+            const qPhone = query(applicantsCollection, where("phone", "==", phone));
+            const snapshotPhone = await getDocs(qPhone);
+            if (!snapshotPhone.empty) return true;
+
             return false;
         } catch(err) {
             console.error("Lỗi khi check trùng lặp:", err);
-            return false; // Nếu lỗi, cứ cho qua để không block user
+            // Nếu có lỗi mạng, chặn submit để an toàn, hoặc cho qua tùy nghiệp vụ. Ở đây báo lỗi:
+            alert("Đã xảy ra lỗi khi kết nối máy chủ. Vui lòng thử lại sau.");
+            return true; // Chặn lại
         }
     }
 
 
-    // Xử lý Validation và Submit
+    /* ======= Đồng bộ dữ liệu sang Google Sheets (Background Sync) ======= */
+    function submitToGoogleForm(dataObj) {
+        const formUrl = "https://docs.google.com/forms/d/e/1FAIpQLSd3XseDNvnpvxjG9ay_r0fjlOLeNOlo9Wbll5gvaWlpbcABww/formResponse";
+        
+        // Tạo URLSearchParams để format dữ liệu thành dạng x-www-form-urlencoded
+        const formData = new URLSearchParams();
+        
+        // Ánh xạ lại tên trường (key) sang dạng entry.XXX của Google Form
+        formData.append("entry.400419397", dataObj.fullName || "");
+        formData.append("entry.1656052568", dataObj.gender || "");
+        formData.append("entry.2090134030", dataObj.dob || "");
+        formData.append("entry.531147708", dataObj.phone || "");
+        formData.append("entry.1116838991", dataObj.cccd || "");
+        formData.append("entry.1816975943", dataObj.address || "");
+        formData.append("entry.590641482", dataObj.currentAddress || "");
+        formData.append("entry.1849515334", dataObj.shift || "");
+        formData.append("entry.1059679510", dataObj.vnidLevel2 || "");
+        formData.append("entry.374361314", dataObj.otherInsurance || "");
+        formData.append("entry.988164786", dataObj.unemploymentInsurance || "");
+
+        // Gửi request ngầm, không cần quan tâm response (vì no-cors)
+        fetch(formUrl, {
+            method: "POST",
+            mode: "no-cors",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: formData.toString()
+        }).catch(err => console.log("Lỗi đồng bộ GSheet (background):", err));
+    }
+
+    /* ======= Xử lý Submit Form ======= */
     submitBtn.addEventListener('click', async function(e) {
-        e.preventDefault(); // Luôn chặn mặc định để xử lý riêng
+        e.preventDefault(); 
         
         // Form Validation (HTML5 Pattern & Required)
         if (!applyForm.checkValidity()) {
@@ -112,7 +130,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        // Validate ngày sinh theo regex
         const dobInput = document.getElementById('dob');
         const dobRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$/;
         if (dobInput && !dobRegex.test(dobInput.value.trim())) {
@@ -134,7 +151,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const originalBtnHTML = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> <span>ĐANG KIỂM TRA...</span>';
         submitBtn.style.opacity = '0.8';
-        submitBtn.style.pointerEvents = 'none'; // Chặn click nhiều lần
+        submitBtn.style.pointerEvents = 'none';
 
         // Lấy SĐT và CCCD để check trùng
         const phone = document.getElementById('phone').value.trim();
@@ -143,120 +160,55 @@ document.addEventListener("DOMContentLoaded", function() {
         const isDuplicate = await checkDuplicate(phone, cccd);
         
         if (isDuplicate) {
-            alert("❌ Số Điện Thoại hoặc Số CCCD này đã được đăng ký trước đó. Bạn không thể nộp thêm!");
+            alert("❌ Số Điện Thoại hoặc Số CCCD này đã được đăng ký trước đó, hoặc kết nối mạng có vấn đề. Bạn không thể nộp thêm!");
             submitBtn.innerHTML = originalBtnHTML;
             submitBtn.style.opacity = '1';
             submitBtn.style.pointerEvents = 'auto';
-            return; // Dừng lại, không submit
+            return; 
         }
 
-
-
-        // Gửi form đi
+        // Gửi data lên Firebase
         submitBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> <span>ĐANG GỬI...</span>';
-        applyForm.submit();
+        
+        // Thu thập dữ liệu từ form
+        const formData = new FormData(applyForm);
+        const dataObj = Object.fromEntries(formData.entries());
+        // Thêm timestamp để biết lúc gửi
+        dataObj.timestamp = serverTimestamp();
+
+        try {
+            // Lưu vào Firestore (Bảo mật gốc)
+            await addDoc(applicantsCollection, dataObj);
+            
+            // Đồng bộ ngầm lên Google Sheets cũ
+            submitToGoogleForm(dataObj);
+            
+            // Xử lý UI thành công
+            applyForm.style.display = 'none';
+            document.querySelector('.form-subtitle').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'flex';
+            
+            // Cập nhật lại số lượng ngay lập tức
+            fetchApplicantCount();
+            
+        } catch (error) {
+            console.error("Lỗi khi thêm hồ sơ:", error);
+            alert("❌ Gặp lỗi khi gửi hồ sơ. Vui lòng thử lại sau.");
+            submitBtn.innerHTML = originalBtnHTML;
+            submitBtn.style.opacity = '1';
+            submitBtn.style.pointerEvents = 'auto';
+        }
     });
 
-    applyForm.addEventListener('submit', function(e) {
-        // Đã chặn mặc định ở click event để check duplicate, listener này chỉ dự phòng.
-    });
-
-    // Check for success via URL params
+    // Check for success via URL params (Giữ lại nếu người dùng ấn F5 ở URL cũ)
     const urlParams = new URLSearchParams(window.location.search);
     if(urlParams.get('success') === 'true') {
         applyForm.style.display = 'none';
         document.querySelector('.form-subtitle').style.display = 'none';
-        
-        // Hide QR button if present
-        const btnScanQR = document.getElementById('btnScanQR');
-        if (btnScanQR) btnScanQR.style.display = 'none';
-
         document.getElementById('successMessage').style.display = 'flex';
-
-    }
-
-    // Chặn iframe load event để set localStorage trước khi reload
-    const iframe = document.getElementById('hidden_iframe');
-    if (iframe) {
-        iframe.addEventListener('load', function() {
-            // Iframe load có thể xảy ra khi trang mới mở, nên chỉ xử lý khi đang submit
-            if (submitBtn.innerHTML.includes('ĐANG GỬI')) {
-                window.location = '?success=true';
-            }
-        });
-    }
-
-    // Clean URL without reloading page
-    if (window.history.replaceState && window.location.search.includes('success=true')) {
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    /* ======= Admin Function ======= */
-    const btnAdmin = document.getElementById('btnAdmin');
-    const adminModal = document.getElementById('adminModal');
-    const btnCloseAdmin = document.getElementById('btnCloseAdmin');
-    const sheetLinkInput = document.getElementById('sheetLinkInput');
-    const btnSaveSheet = document.getElementById('btnSaveSheet');
-    const btnTestSheet = document.getElementById('btnTestSheet');
-    const btnDeleteSheet = document.getElementById('btnDeleteSheet');
-    const adminStatusText = document.getElementById('adminStatusText');
-
-    const ADMIN_PASSWORD = "Admin@agari123"; // Đổi mật khẩu tại đây
-
-    if (btnAdmin) {
-        btnAdmin.addEventListener('click', () => {
-            const pwd = prompt("Nhập mật khẩu để truy cập Quản trị:");
-            if (pwd === ADMIN_PASSWORD) {
-                adminModal.classList.add('show');
-                sheetLinkInput.value = localStorage.getItem('agari_sheet_link') || "";
-                adminStatusText.innerText = "";
-            } else if (pwd !== null) {
-                alert("Mật khẩu không chính xác!");
-            }
-        });
-    }
-
-    if (btnCloseAdmin) {
-        btnCloseAdmin.addEventListener('click', () => {
-            adminModal.classList.remove('show');
-        });
-    }
-
-    if (btnSaveSheet) {
-        btnSaveSheet.addEventListener('click', () => {
-            const link = sheetLinkInput.value.trim();
-            if (link) {
-                localStorage.setItem('agari_sheet_link', link);
-                adminStatusText.innerText = "Đã lưu cấu hình thành công!";
-                adminStatusText.className = "admin-status status-success";
-                // Tự động load lại đếm số lượng
-                fetchSheetCount(link);
-            } else {
-                adminStatusText.innerText = "Vui lòng nhập link!";
-                adminStatusText.className = "admin-status status-error";
-            }
-        });
-    }
-
-    if (btnTestSheet) {
-        btnTestSheet.addEventListener('click', () => {
-            const link = sheetLinkInput.value.trim();
-            if (link) {
-                window.open(link, '_blank');
-            } else {
-                adminStatusText.innerText = "Chưa có link nào được lưu!";
-                adminStatusText.className = "admin-status status-error";
-            }
-        });
-    }
-
-    if (btnDeleteSheet) {
-        btnDeleteSheet.addEventListener('click', () => {
-            localStorage.removeItem('agari_sheet_link');
-            sheetLinkInput.value = "";
-            adminStatusText.innerText = "Đã xóa cấu hình.";
-            adminStatusText.className = "admin-status status-success";
-            countBlock.style.display = 'none';
-        });
+        // Xóa param
+        if (window.history.replaceState) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
     }
 });

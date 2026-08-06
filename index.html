@@ -100,20 +100,18 @@
             <h2>ĐIỀN THÔNG TIN ỨNG TUYỂN</h2>
             <p class="form-subtitle">Điền đầy đủ thông tin bên dưới, hoặc sử dụng tính năng quét mã QR Căn Cước Công Dân để điền tự động.</p>
 
-            <!-- Khung iframe ẩn để gửi biểu mẫu không bị reload trang -->
-            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-            
-            <form id="applyForm" action="https://docs.google.com/forms/d/e/1FAIpQLSd3XseDNvnpvxjG9ay_r0fjlOLeNOlo9Wbll5gvaWlpbcABww/formResponse" method="POST" target="hidden_iframe">
+            <!-- Form Ứng Tuyển -->
+            <form id="applyForm">
                 
                 <div class="form-group">
                     <label for="fullName">Họ và Tên *</label>
-                    <input type="text" id="fullName" name="entry.400419397" placeholder="Nhập in hoa có dấu (VD: NGUYỄN VĂN A)" required>
+                    <input type="text" id="fullName" name="fullName" placeholder="Nhập in hoa có dấu (VD: NGUYỄN VĂN A)" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="gender">Giới tính *</label>
-                        <select id="gender" name="entry.1656052568" required>
+                        <select id="gender" name="gender" required>
                             <option value="" disabled selected>Chọn giới tính</option>
                             <option value="Nam">Nam</option>
                             <option value="Nữ">Nữ</option>
@@ -121,35 +119,35 @@
                     </div>
                     <div class="form-group">
                         <label for="dob">Ngày/Tháng/Năm Sinh *</label>
-                        <input type="text" id="dob" name="entry.2090134030" placeholder="VD: 01/01/2000" pattern="^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$" title="Vui lòng nhập đúng định dạng DD/MM/YYYY (VD: 01/01/2000)" required>
+                        <input type="text" id="dob" name="dob" placeholder="VD: 01/01/2000" pattern="^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/\d{4}$" title="Vui lòng nhập đúng định dạng DD/MM/YYYY (VD: 01/01/2000)" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="phone">Số điện thoại Zalo của bạn *</label>
-                    <input type="tel" id="phone" name="entry.531147708" placeholder="Nhập số điện thoại Zalo" required>
+                    <input type="tel" id="phone" name="phone" placeholder="Nhập số điện thoại Zalo" required>
                 </div>
 
                 <div class="form-row">
                     <div class="form-group">
                         <label for="cccd">Số Căn Cước Công Dân *</label>
-                        <input type="number" id="cccd" name="entry.1116838991" placeholder="Nhập 12 số CCCD" required>
+                        <input type="number" id="cccd" name="cccd" placeholder="Nhập 12 số CCCD" required>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="address">Địa chỉ thường trú (Theo CCCD) *</label>
-                    <input type="text" id="address" name="entry.1816975943" placeholder="Ghi theo căn cước công dân" required>
+                    <input type="text" id="address" name="address" placeholder="Ghi theo căn cước công dân" required>
                 </div>
 
                 <div class="form-group">
                     <label for="currentAddress">Địa chỉ tạm trú *</label>
-                    <input type="text" id="currentAddress" name="entry.590641482" placeholder="Chỗ ở hiện tại của bạn" required>
+                    <input type="text" id="currentAddress" name="currentAddress" placeholder="Chỗ ở hiện tại của bạn" required>
                 </div>
 
                 <div class="form-group">
                     <label for="shift">Bạn đăng ký ca làm việc nào? *</label>
-                    <select id="shift" name="entry.1849515334" required>
+                    <select id="shift" name="shift" required>
                         <option value="" disabled selected>Chọn ca làm việc</option>
                         <option value="6H-15H - LƯƠNG 230K">6H-15H - LƯƠNG 230K</option>
                         <option value="6H-11H - LƯƠNG 155K">6H-11H - LƯƠNG 155K</option>
@@ -162,24 +160,24 @@
                 <div class="form-group checkbox-group">
                     <label>Bạn có VNID Mức 2 không? *</label>
                     <div class="radio-options">
-                        <label><input type="radio" name="entry.1059679510" value="CÓ" required> CÓ</label>
-                        <label><input type="radio" name="entry.1059679510" value="KHÔNG"> KHÔNG</label>
+                        <label><input type="radio" name="vnidLevel2" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="vnidLevel2" value="KHÔNG"> KHÔNG</label>
                     </div>
                 </div>
 
                 <div class="form-group checkbox-group">
                     <label>Bạn có đang tham gia BHXH bên CTY khác hoặc tự nguyện không? *</label>
                     <div class="radio-options">
-                        <label><input type="radio" name="entry.374361314" value="CÓ" required> CÓ</label>
-                        <label><input type="radio" name="entry.374361314" value="KHÔNG"> KHÔNG</label>
+                        <label><input type="radio" name="otherInsurance" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="otherInsurance" value="KHÔNG"> KHÔNG</label>
                     </div>
                 </div>
 
                 <div class="form-group checkbox-group">
                     <label>Bạn có đang lãnh Bảo Hiểm Thất Nghiệp không? *</label>
                     <div class="radio-options">
-                        <label><input type="radio" name="entry.988164786" value="CÓ" required> CÓ</label>
-                        <label><input type="radio" name="entry.988164786" value="KHÔNG"> KHÔNG</label>
+                        <label><input type="radio" name="unemploymentInsurance" value="CÓ" required> CÓ</label>
+                        <label><input type="radio" name="unemploymentInsurance" value="KHÔNG"> KHÔNG</label>
                     </div>
                 </div>
 
@@ -230,6 +228,6 @@
         <i class="ri-settings-4-fill"></i>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
