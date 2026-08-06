@@ -260,12 +260,3 @@ document.addEventListener("DOMContentLoaded", function() {
         });
     }
 });
-
-// A global flag for the hidden iframe onload event
-let submitted = false;
-const applyFormGlobal = document.getElementById('applyForm');
-if (applyFormGlobal) {
-    applyFormGlobal.addEventListener('submit', () => {
-        submitted = true;
-    });
-}

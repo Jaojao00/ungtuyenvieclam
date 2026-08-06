@@ -101,16 +101,10 @@
             <p class="form-subtitle">Điền đầy đủ thông tin bên dưới, hoặc sử dụng tính năng quét mã QR Căn Cước Công Dân để điền tự động.</p>
 
             <!-- Khung iframe ẩn để gửi biểu mẫu không bị reload trang -->
-            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;" onload="if(submitted) {window.location='?success=true';}"></iframe>
+            <iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
             
             <form id="applyForm" action="https://docs.google.com/forms/d/e/1FAIpQLSd3XseDNvnpvxjG9ay_r0fjlOLeNOlo9Wbll5gvaWlpbcABww/formResponse" method="POST" target="hidden_iframe">
                 
-                <!-- Bắt buộc điền ẩn cho Google Form -->
-                <input type="hidden" name="entry.479446949_year" value="2020">
-                <input type="hidden" name="entry.479446949_month" value="01">
-                <input type="hidden" name="entry.479446949_day" value="01">
-                <input type="hidden" name="entry.1889856184" value="BỘ CÔNG AN">
-
                 <div class="form-group">
                     <label for="fullName">Họ và Tên *</label>
                     <input type="text" id="fullName" name="entry.400419397" placeholder="Nhập in hoa có dấu (VD: NGUYỄN VĂN A)" required>
@@ -159,7 +153,7 @@
                         <option value="" disabled selected>Chọn ca làm việc</option>
                         <option value="6H-15H - LƯƠNG 230K">6H-15H - LƯƠNG 230K</option>
                         <option value="6H-11H - LƯƠNG 155K">6H-11H - LƯƠNG 155K</option>
-                        <option value="13H-22H - LƯƠNG 230K">13H-22H - LƯƠNG 230K</option>
+                        <option value="15H-22H - LƯƠNG 200K">15H-22H - LƯƠNG 200K</option>
                         <option value="18H-22H - LƯƠNG 125K">18H-22H - LƯƠNG 125K</option>
                         <option value="22H-6H - LƯƠNG 280K">22H-6H - LƯƠNG 280K</option>
                     </select>
